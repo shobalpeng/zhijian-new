@@ -6,6 +6,11 @@
 用法:
     python scripts/warm_thumbs.py [base_url]
 
+superuser 密码可用环境变量传入（推荐，避免把密码写死在代码里）：
+    ZJ_ADMIN_PASSWORD='你的密码' python scripts/warm_thumbs.py
+    或 docker exec -e ZJ_ADMIN_PASSWORD='你的密码' <容器> \
+      python3 /app/scripts/warm_thumbs.py http://127.0.0.1:8090
+
 会遍历所有带 file 字段的集合，把每个文件的 300x0 / 600x0 两档缩略图都请求一遍，
 生成后 PocketBase 会缓存到 storage 的 thumbs_* 目录，之后就是秒开。
 """
@@ -18,8 +23,8 @@ import urllib.error
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BASE = sys.argv[1] if len(sys.argv) > 1 else "http://127.0.0.1:8090"
-ADMIN_EMAIL = "admin@zhijian.app"
-ADMIN_PASSWORD = "Zhijian#2026!"
+ADMIN_EMAIL = os.environ.get("ZJ_ADMIN_EMAIL", "admin@zhijian.app")
+ADMIN_PASSWORD = os.environ.get("ZJ_ADMIN_PASSWORD", "Zhijian#2026!")
 THUMBS = ["600x0", "900x0"]
 
 # 集合 id → file 字段名
