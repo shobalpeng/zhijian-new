@@ -1,133 +1,188 @@
-# Pocket Stack ：AI友好的全栈开发解决方案
+# 织间
 
-2026年，最好的技术方案就是最“AI友好”的技术方案。这是一套AI友好的前后端技术栈，结合规则提示词和MCP等技术，打造一个非专业人员可用的 Vibe Coding 开发环境。为“就缺一个程序员”的你提供一个阿拉丁神灯般的开发平台。
+> 两个人的生活记录本 —— 一起把日子过成值得回看的故事。
 
-基于 React + shadcn/ui + PocketBase + MCP 等技术，实现完整、流畅的全栈 Vibe Coding 开发体验。
+情侣 / 家庭共同使用的记录应用。分「任务」「心愿」这类需要互相确认的互动项，也分「聚餐」「菜谱」「漫游」「旅行」「纪念日」这类一起沉淀的生活档案，中间用一套「心动积分」把两个人的参与串起来。
 
-![Pocket Stack 示例页面](docs/assets/example-dashboard.png)
+移动端优先，单人也能用（未配对时是个人记录模式）。
 
-## 📄 更多信息
+---
 
-- [文档](https://citywill.github.io/pocket-stack/)
+## ✨ 功能
 
-## 基于 PockeStack 的 Vibe Coding 图示
+| 模块 | 说明 |
+| :--- | :--- |
+| **任务** | 互相派活 → 提交 → 对方确认，确认后自动发放积分 |
+| **心愿** | 同任务的双角色互动项，想法、约定都能记下来 |
+| **聚餐** | 餐厅、菜品、花费、评分、同行人，附带统计（次数、总花费、最常去） |
+| **菜谱** | 菜谱收藏 + 烹饪记录，做过几次一目了然 |
+| **漫游** | 地图足迹，记录去过的地方与瞬间 |
+| **旅行** | 目的地清单 + 每程花费统计 |
+| **纪念日** | 纪念日倒计时、在一起的天数 |
+| **物品** | 物品与日均成本 |
+| **待办** | 分为「两个人的」和「我自己的」两栏 |
+| **心动积分** | 完成互动项累积积分，双方都有各自的余额 |
+| **配对** | 邀请码绑定伴侣，绑定后数据互相可见 |
 
-![Pocket Stack Vibe Coding 图示](docs/assets/diagram.png)
+其他细节：
 
-## 🌟 核心特性
+- 首页聚合待办角标、纪念日倒计时、最近动态
+- 明暗主题 + 5 套配色（蓝 / 粉 / 绿 / 红 / 灰），服务端保存偏好
+- 农历支持（纪念日按农历提醒）
+- 图片上传后自动生成多档缩略图，列表页加载小图、点开看原图
+- 移动端底部导航 + 桌面端自适应
 
-- 🤖 **AI 友好**：结合项目中的`AGENTS.md`和[pocketstack skill](https://github.com/citywill/pocketstack-skill)，实现使用AI IDE（例如TRAE）或通用智能体（例如Codex等），完成项目的代码部署、环境配置、模块开发。
-- 🎨 **前端特性**：基于 shadcn/ui (Maia 风格) 与 Tailwind CSS v4，支持 Blue、Green、Red、Gray 四种主题颜色切换，内置亮色、深色、跟随系统模式。全站采用 Heroicons 图标库。自适应 Desktop、Tablet 及 Mobile 布局。
-- 🚀 **后端特性**：原生集成 [PocketBase](https://pocketbase.io/)，覆盖身份验证及数据存储。
-- 🧩 **模块化架构**：支持业务模块解耦开发，每个模块独立定义组件（`components/`）、迁移文件（`migrations/`）、包定义（`package.json`）、路由 (`routes.tsx`) 与菜单 (`menu.ts`)，实现即插即用。
-- 📋 **业务示例**：内置个人任务管理系统，支持多状态流转、优先级设定及用户数据隔离。
-- 🎪 **身份认证**：支持“超级管理员”与“普通管理员”登录模式。
-- 🛡️ **权限控制**：
-    - 路由级保护 (`ProtectedRoute`, `AdminOnlyRoute`)。
-    - 侧边栏菜单根据角色动态过滤。
-    - UI 自动根据权限进行降级或隐藏。
-    - 后端 API Rules 确保租户/用户级数据物理隔离。
+---
 
-## 🌐 技术栈
+## 🛠 技术栈
 
-| 领域          | 技术方案                     |
-| :------------ | :--------------------------- |
-| **后端/认证** | PocketBase                   |
-| **前端框架**  | React 19 + TypeScript        |
-| **构建工具**  | Vite                         |
-| **UI 组件**   | shadcn/ui (@base-ui/react)   |
-| **样式**      | Tailwind CSS v4 (Maia Style) |
-| **路由**      | React Router v7              |
-| **图标**      | HeroIcons React              |
+| 领域 | 技术方案 |
+| :--- | :--- |
+| **后端 / 认证 / 存储** | PocketBase v0.40（Go 单文件，业务逻辑写在 `pb_hooks/*.pb.js`） |
+| **前端框架** | React 19 + TypeScript |
+| **构建工具** | Vite 7 |
+| **UI 组件** | shadcn/ui（@base-ui/react） |
+| **样式** | Tailwind CSS v4（CSS 变量驱动主题） |
+| **路由** | React Router v7 |
+| **图标** | Heroicons React |
+| **其他** | date-fns、lunar-javascript（农历）、recharts、leaflet、sonner |
+
+**为什么用 PocketBase**：一个可执行文件就是数据库 + 文件存储 + REST API + 认证，NAS 上一个容器就能跑起来；业务逻辑用它的 JSVM 钩子写，状态机、积分发放这类关键逻辑放在服务端，绕不开并发问题。
+
+---
+
+## 🚀 本地开发
+
+### 1. 准备 PocketBase
+
+把对应平台的 PocketBase 可执行文件放进 `.pocketbase/`：
+
+- Windows：`.pocketbase/pocketbase.exe`
+- macOS / Linux：`.pocketbase/pocketbase`
+
+下载地址：<https://github.com/pocketbase/pocketbase/releases>（项目使用 v0.40.6）
+
+### 2. 安装依赖
+
+```bash
+npm install
+```
+
+### 3. 启动开发环境
+
+```bash
+npm run dev
+```
+
+一条命令同时拉起 PocketBase（:8090）和 Vite（:5173），日志混在一个窗口里。
+
+Vite 默认监听所有网卡，**手机连同一个 WiFi 也能直接调试**：
+
+```
+http://<你的局域网IP>:5173/
+```
+
+### 4. 初始化数据库
+
+首次启动会自动创建超级管理员 `admin@zhijian.app`（初始密码见 `scripts/apply_collections.py` 里的 `ADMIN_PASSWORD`）。
+
+把集合结构同步进数据库：
+
+```bash
+python scripts/apply_collections.py http://127.0.0.1:8090
+```
+
+### 5. 配对
+
+用超级管理员在 `http://127.0.0.1:8090/_/` 里能看到全部数据。普通用户在「我的 → 绑定伴侣」用邀请码绑定后，就能共享生活记录。
+
+### 常用命令
+
+| 命令 | 说明 |
+| :--- | :--- |
+| `npm run dev` | 同时启动 PocketBase + Vite |
+| `npm run build` | 类型检查 + 生产构建 |
+| `npm run preview` | 预览生产构建 |
+| `npm run lint` | ESLint |
+| `python scripts/apply_collections.py <url>` | 同步集合结构（幂等） |
+| `python scripts/warm_thumbs.py <url>` | 预生成图片缩略图（首次访问会慢时跑一次） |
+
+---
+
+## 🐳 部署（Docker）
+
+一个容器同时提供前端静态文件与 PocketBase：
+
+```
+浏览器 ──:8099──▶ nginx :80  ┬─ /       前端（SPA）
+                            ├─ /api/   → PocketBase :8090（仅容器内）
+                            └─ /_/     → PocketBase 管理后台
+                                   └─ data/pb_data（卷，数据库 + 上传的图片）
+```
+
+### 用 GitHub Actions 出镜像（推荐）
+
+仓库已配置 `.github/workflows/docker-image.yml`：打 tag 即自动构建 **amd64 + arm64** 双架构镜像并推送到 `ghcr.io`。
+
+```bash
+git tag v1.0.0 && git push origin main v1.0.0
+```
+
+NAS 上：
+
+```bash
+docker login ghcr.io -u <GitHub用户名> -p <PAT>   # PAT 需 read:packages
+docker pull ghcr.io/<用户名>/zhijian:v1.0.0
+docker compose up -d
+```
+
+### 完整文档
+
+- [`deploy/README.md`](deploy/README.md) —— NAS 部署全流程、构建时的网络依赖、拷贝清单、常见问题
+- [`deploy/GITHUB-ACTIONS.md`](deploy/GITHUB-ACTIONS.md) —— 镜像构建与自动部署到 NAS
+- [`deploy/IMAGE-SHIP.md`](deploy/IMAGE-SHIP.md) —— 另一条镜像交付路线（`docker save` / `buildx`）
+
+---
 
 ## 📁 目录结构
 
 ```text
-├── .pocketbase/         # PocketBase 数据库目录
-├── docs/                # 文档目录
-├── public/              # 静态资源
-└── src/
-    ├── components/
-    │   ├── layout/      # 布局组件 (Sidebar, Header, MainLayout)
-    │   ├── ui/          # shadcn/ui 组件库
-    │   ├── auth-provider.tsx # 认证上下文
-    │   ├── menu.ts      # 全局菜单配置
-    │   ├── protected-route.tsx # 路由守卫
-    │   └── theme-provider.tsx # 主题上下文
-    ├── lib/             # 工具库 (pocketbase, utils)
-    ├── modules/         # 模块
-    │   └── examples/    # 示例模块 (包含 CURD, AI Chat, Blog 等示例)
-    │       ├── components/ # 模块组件
-    │       ├── migrations/ # 模块数据库迁移文件
-    │       ├── routes.tsx # 模块路由
-    │       ├── menu.ts  # 模块菜单配置文件
-    │       ├── package.json # 模块包定义文件
-    │       └── README.md    # 模块说明文件
-    ├── pages/           # 系统页面
-    │   ├── admin/       # 管理后台 (Dashboard, Settings, Users)
-    │   ├── Login.tsx    # 登录页
-    │   ├── Register.tsx # 注册页
-    │   └── Profile.tsx  # 个人资料页
-    ├── App.tsx          # 根组件
-    └── main.tsx         # 入口文件
+zhijianV1.1/
+├── pb_hooks/               # PocketBase 业务钩子（JSVM）
+│   ├── tasks.pb.js         #   任务/心愿状态机 + 积分发放
+│   ├── wishes.pb.js
+│   ├── points.pb.js        #   积分余额汇总
+│   ├── pair.pb.js          #   配对 / 解绑
+│   ├── recipes.pb.js       #   烹饪统计
+│   └── users.pb.js         #   注册即建 user_settings
+├── src/
+│   ├── modules/            # 业务模块（每个模块自带迁移、路由、菜单）
+│   │   ├── tasks/  wishes/  dines/  recipes/
+│   │   ├── wanders/  travel/  anniversaries/
+│   │   ├── items/  todos/  points/
+│   │   ├── home/            #   首页聚合
+│   │   ├── pair/            #   配对页
+│   │   └── me/              #   我的（外观 / 伴侣 / 账号安全）
+│   ├── components/
+│   │   ├── common/          # 通用组件（表单页、图片、列表件…）
+│   │   ├── interactive/     # 任务 / 心愿共用的互动项组件
+│   │   ├── layout/          # AppShell + BottomNav
+│   │   └── ui/              # shadcn/ui 组件
+│   ├── hooks/               # 数据 hooks（余额、待确认数、最近动态…）
+│   └── lib/                # 工具库（pocketbase、格式化、农历）
+├── scripts/                 # 维护脚本（建表、预热缩略图、验证）
+├── deploy/                  # 部署文档与脚本
+├── Dockerfile               # 单容器镜像（nginx + PocketBase）
+├── docker-compose.yml       # NAS 部署用（只含 image，不构建）
+├── docker-compose.build.yml # 本机构建用（只含 build）
+├── nginx.conf               # 静态托管 + 反向代理
+└── .github/workflows/       # 镜像构建流水线
 ```
 
-## 🚀 快速开始
+**数据存放**：全部业务数据在 `data/pb_data`（数据库 + `storage/` 里的图片）。备份、迁移只需要这一个目录。
 
-建议使用`pocketstack skill`创建新的PocketStack项目。
+---
 
-例如，在agent中输入提示词：`在{指定目录下}初始化一个PocketStack项目，并运行开发环境`
+## 📄 致谢
 
-也按以下步骤手动开始：
-
-### 1. 克隆项目并初始化环境变量配置文件
-
-```bash
-git clone https://github.com/citywill/pocket-stack <项目目录名>
-cd <项目目录名>
-cp .env.example .env
-```
-
-> 项目目录名由用户指定，若用户未提供则默认为 `pocket-stack`。
-
-### 2. 安装后端 (PocketBase)
-
-将 PocketBase 可执行文件下载到项目根目录：
-
-- 前往 [PocketBase Releases](https://github.com/pocketbase/pocketbase/releases) 下载对应平台的可执行文件
-- Windows: `pocketbase.exe`
-- macOS/Linux: `pocketbase`
-
-将下载的文件放置在项目根目录 `.pocketbase/` 下。
-
-### 3. 安装依赖
-
-```bash
-npm install
-# 或使用 pnpm
-pnpm install
-```
-
-### 4. 启动开发环境
-
-```bash
-npm run dev
-# 或使用 pnpm
-pnpm dev
-```
-
-该命令会同时启动 PocketBase 后端和 Vite 前端开发服务器。
-
-### 5. 配置PocketBase
-
-在浏览器中访问 `http://127.0.0.1:8090/_/` 创建管理员账号并配置集合（开发环境建议使用默认账号密码 `admin@example.com/admin12345`）。
-
-### 6. 初始化模块
-
-在浏览器访问 `http://localhost:5173`，使用superuser账号登录，访问模块管理功能，即可初始化模块。
-
-## 联系和讨论
-
-添加微信好友，加微信入群，备注 pocketstack
-
-<img src="docs/assets/weixin.png" width="200"/>
+本项目基于 [pocket-stack](https://github.com/citywill/pocket-stack) 脚手架搭建，遵循其 MIT 许可证（见 [LICENSE](./LICENSE)）。
