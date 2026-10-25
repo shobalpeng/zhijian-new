@@ -1,8 +1,6 @@
 import { useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
+import { Link } from 'react-router-dom';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
-import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
 import { useCollection } from '@/hooks/use-collection';
 import { ImageCarousel } from '@/components/common/image-carousel';
@@ -90,7 +88,6 @@ function DineStatsCard({ records }: { records: Dine[] }) {
 }
 
 export function DinesPage() {
-  const navigate = useNavigate();
   const list = useCollection<Dine>('dines', { sort: '-date' });
 
   const [search, setSearch] = useState('');
@@ -105,15 +102,6 @@ export function DinesPage() {
       `${d.restaurant ?? ''} ${d.people ?? ''}`.toLowerCase().includes(keyword),
     );
   }, [list.records, list.allRecords, keyword]);
-
-  const remove = async (d: Dine) => {
-    try {
-      await list.remove(d.id);
-      toast.success('已删除');
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : '删除失败');
-    }
-  };
 
   return (
     <div className="space-y-4 pb-4">
@@ -184,12 +172,16 @@ export function DinesPage() {
                     {!isLast && <div className="mt-1 w-0.5 flex-1 bg-border" />}
                   </div>
 
-                  <Card className={cn('min-w-0 flex-1 overflow-hidden rounded-2xl', !isLast && 'mb-4')}>
+                  <Link
+                    to={`/dines/${d.id}`}
+                    className={cn('min-w-0 flex-1 overflow-hidden rounded-2xl', !isLast && 'mb-4')}
+                  >
+                    <Card className="min-w-0 overflow-hidden rounded-2xl">
                     <CardContent className="space-y-3 pt-4">
                       <ImageCarousel urls={urls} alt={d.restaurant} />
 
-                      {/* 文字区点击进入详情（详情页里可编辑/删除） */}
-                      <Link to={`/dines/${d.id}`} className="block space-y-1">
+                      {/* 文字区 */}
+                      <div className="space-y-1">
                         <div className="flex items-start justify-between gap-2">
                           <p className="truncate font-medium">{d.restaurant}</p>
                           {(d.rating ?? 0) > 0 && (
@@ -226,30 +218,10 @@ export function DinesPage() {
                         {d.comment && (
                           <p className="line-clamp-3 text-sm text-muted-foreground">{d.comment}</p>
                         )}
-                      </Link>
-
-                      <div className="flex items-center justify-end gap-1 border-t pt-2">
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-8 w-8 rounded-xl text-muted-foreground"
-                          aria-label="编辑"
-                          onClick={() => navigate(`/dines/${d.id}/edit`)}
-                        >
-                          <PencilIcon className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-8 w-8 rounded-xl text-muted-foreground"
-                          aria-label="删除"
-                          onClick={() => void remove(d)}
-                        >
-                          <TrashIcon className="h-4 w-4" />
-                        </Button>
                       </div>
                     </CardContent>
-                  </Card>
+                    </Card>
+                  </Link>
                 </div>
               );
             })}
