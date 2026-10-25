@@ -10,10 +10,7 @@
     "dev": "node scripts/dev.mjs",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview",
-    "docs:dev": "vitepress dev docs",
-    "docs:build": "vitepress build docs",
-    "docs:preview": "vitepress preview docs"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@base-ui/react": "^1.0.0",
@@ -60,7 +57,6 @@
     "globals": "^16.5.0",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.4",
-    "vite": "^7.2.4",
-    "vitepress": "^2.0.0-alpha.15"
+    "vite": "^7.2.4"
   }
 }
