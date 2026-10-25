@@ -18,7 +18,9 @@ const pb = spawn(pocketbase, ["serve", "--dir", path.join(root, ".pocketbase", "
 });
 
 // 启动 Vite
-const vite = spawn("npx", ["vite"], {
+// --host：监听所有网卡，这样 127.0.0.1 / localhost / 局域网 IP（手机同 WiFi 调试）都能访问。
+//   不加时 Vite 7 只绑 [::1]（IPv6），浏览器用 http://127.0.0.1:5173 会连不上。
+const vite = spawn("npx", ["vite", "--host"], {
   stdio: "inherit",
   cwd: root,
   shell: true,

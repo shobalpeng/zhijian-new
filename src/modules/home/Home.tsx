@@ -1,7 +1,6 @@
 import type { ComponentType } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  ArrowRightIcon,
   BellAlertIcon,
   BookOpenIcon,
   CakeIcon,
@@ -69,24 +68,24 @@ function PointsCard({
   togetherDays: number | null;
 }) {
   return (
-    <Card className="rounded-2xl">
-      <CardContent className="pt-5">
+    <Card className="rounded-2xl py-2.5">
+      <CardContent>
         <div className="flex items-center justify-around">
           <div className="flex flex-col items-center">
             <span className="text-sm text-muted-foreground">我</span>
-            <span className="text-3xl font-bold tabular-nums text-primary">{myPoints}</span>
+            <span className="text-2xl font-bold tabular-nums text-primary">{myPoints}</span>
             <span className="text-xs text-muted-foreground">积分</span>
           </div>
           <div className="h-10 w-px bg-border" />
           <div className="flex flex-col items-center">
             <span className="text-sm text-muted-foreground">Ta</span>
-            <span className="text-3xl font-bold tabular-nums text-foreground">{partnerPoints}</span>
+            <span className="text-2xl font-bold tabular-nums text-foreground">{partnerPoints}</span>
             <span className="text-xs text-muted-foreground">积分</span>
           </div>
         </div>
 
         {togetherDays !== null && (
-          <p className="mt-3 border-t pt-3 text-center text-xs font-medium text-primary">
+          <p className="mt-1.5 border-t pt-1.5 text-center text-xs font-medium text-primary">
             💕 和Ta在一起已经 {togetherDays} 天
           </p>
         )}
@@ -110,8 +109,8 @@ function PendingCard({
   if (pending.submittedWishes > 0) parts.push(`${pending.submittedWishes}个心愿待确认`);
 
   return (
-    <Card className="rounded-2xl">
-      <CardContent className="pt-4">
+    <Card className="rounded-2xl py-4">
+      <CardContent>
         <button type="button" onClick={onOpen} className="w-full text-left">
           <div className="flex items-center gap-2">
             <BellAlertIcon className="h-4 w-4 text-amber-500" />
@@ -122,7 +121,7 @@ function PendingCard({
               </span>
             )}
           </div>
-          <p className="ml-6 mt-1 text-xs text-muted-foreground">
+          <p className="ml-6 mt-1.5 text-xs text-muted-foreground">
             {parts.length > 0 ? parts.join(' · ') : '暂无待处理事项'}
           </p>
         </button>
@@ -137,18 +136,18 @@ function RecentCard({
 }: {
   upcoming: { name: string; daysUntil: number } | null;
 }) {
-  const activities = useRecentActivity(3);
+  const activities = useRecentActivity(2);
 
   return (
-    <Card className="rounded-2xl">
-      <CardContent className="space-y-3 pt-4">
+    <Card className="rounded-2xl py-4">
+      <CardContent className="space-y-2.5">
         <div className="flex items-center gap-2">
           <ClockIcon className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm font-medium">最近动态</span>
         </div>
 
         {upcoming && (
-          <div className="flex items-start gap-3 border-b pb-2.5">
+          <div className="flex items-start gap-3 border-b pb-2">
             <CalendarDaysIcon className="mt-0.5 h-4 w-4 shrink-0 text-rose-500" />
             <p className="text-xs leading-relaxed">
               <span className="text-muted-foreground">距离下一次{upcoming.name}还剩</span>
@@ -161,7 +160,7 @@ function RecentCard({
         )}
 
         {activities.length > 0 && (
-          <div className="space-y-2.5">
+          <div className="space-y-2">
             {activities.map((a) => (
               <div key={`${a.type}-${a.id}`} className="flex items-start gap-3">
                 {a.type === 'task' ? (
@@ -226,9 +225,9 @@ export function Home() {
   };
 
   return (
-    <div className="space-y-4 pb-4">
-      <header className="pt-2">
-        <h1 className="text-2xl font-semibold tracking-tight">织间</h1>
+    <div className="space-y-2.5 pb-2">
+      <header className="pt-1">
+        <h1 className="text-xl font-semibold tracking-tight">织间</h1>
         <p className="text-sm text-muted-foreground">你好，{displayName(user)}</p>
       </header>
 
@@ -240,8 +239,8 @@ export function Home() {
         />
       ) : (
         /* 未配对：邀请码卡片（配对入口） */
-        <Card className="rounded-2xl">
-          <CardContent className="space-y-3 pt-5">
+        <Card className="rounded-2xl py-3">
+          <CardContent className="space-y-2.5">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium">我的邀请码</p>
@@ -269,8 +268,8 @@ export function Home() {
       <RecentCard upcoming={upcoming} />
 
       {/* 生活记录入口 */}
-      <Card className="rounded-2xl">
-        <CardContent className="pt-4">
+      <Card className="rounded-2xl py-2.5">
+        <CardContent>
           <div className="grid grid-cols-4 gap-2">
             {QUICK_LINKS.map((link) => {
               const count = link.badgeKey ? badges[link.badgeKey] : 0;
@@ -293,13 +292,6 @@ export function Home() {
         </CardContent>
       </Card>
 
-      <Link
-        to="/me"
-        className="flex items-center justify-center gap-1 text-xs text-muted-foreground"
-      >
-        查看我的资料
-        <ArrowRightIcon className="h-3 w-3" />
-      </Link>
     </div>
   );
 }
