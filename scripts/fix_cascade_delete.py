@@ -12,14 +12,21 @@
 用法: python scripts/fix_cascade_delete.py [base_url]
       默认 http://127.0.0.1:8090
       容器内: python3 /app/scripts/fix_cascade_delete.py http://127.0.0.1:8090
+
+superuser 密码可用环境变量传入（推荐，避免把密码写死在代码里）：
+      ZJ_ADMIN_PASSWORD='你的密码' python3 /app/scripts/fix_cascade_delete.py
+      或 docker exec -e ZJ_ADMIN_PASSWORD='你的密码' <容器> python3 /app/scripts/fix_cascade_delete.py
 """
 import json
+import os
 import sys
 import urllib.request
 import urllib.error
 
 BASE = sys.argv[1] if len(sys.argv) > 1 else "http://127.0.0.1:8090"
-SU = {"identity": "admin@zhijian.app", "password": "Zhijian#2026!"}
+ADMIN_IDENTITY = os.environ.get("ZJ_ADMIN_IDENTITY", "admin@zhijian.app")
+ADMIN_PASSWORD = os.environ.get("ZJ_ADMIN_PASSWORD", "Zhijian#2026!")
+SU = {"identity": ADMIN_IDENTITY, "password": ADMIN_PASSWORD}
 
 # (集合 id, 集合名, 字段名) —— 需改成 cascadeDelete=true
 TARGETS = [
