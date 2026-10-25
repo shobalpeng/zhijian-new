@@ -49,8 +49,8 @@ function DineStatsCard({ records }: { records: Dine[] }) {
   if (stats.count === 0) return null;
 
   return (
-    <Card className="rounded-2xl">
-      <CardContent className="space-y-3 pt-4">
+    <Card className="rounded-2xl py-2.5">
+      <CardContent className="space-y-2">
         <p className="text-sm font-medium">🍽️ 聚餐统计</p>
 
         <div className="grid grid-cols-2 gap-2 text-center">
