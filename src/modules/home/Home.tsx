@@ -85,8 +85,11 @@ function PointsCard({
         </div>
 
         {togetherDays !== null && (
-          <p className="mt-1.5 border-t pt-1.5 text-center text-xs font-medium text-primary">
-            💕 和Ta在一起已经 {togetherDays} 天
+          /* 垂直居中：文字行盒在「分隔线 ↔ 卡片外底边」之间上下留白相等（实测各 10px）。
+             pb-0：卡片自身的 py-2.5 已提供底部空间，再加 pb 会把文字顶上去。 */
+          <p className="mt-2.5 flex items-center justify-center gap-1 border-t pt-2.5 pb-0 text-xs font-medium text-primary">
+            <span aria-hidden="true">💕</span>
+            <span>和Ta在一起已经 {togetherDays} 天</span>
           </p>
         )}
       </CardContent>
@@ -109,7 +112,7 @@ function PendingCard({
   if (pending.submittedWishes > 0) parts.push(`${pending.submittedWishes}个心愿待确认`);
 
   return (
-    <Card className="rounded-2xl py-4">
+    <Card className="rounded-2xl py-4.5">
       <CardContent>
         <button type="button" onClick={onOpen} className="w-full text-left">
           <div className="flex items-center gap-2">
@@ -121,7 +124,7 @@ function PendingCard({
               </span>
             )}
           </div>
-          <p className="ml-6 mt-1.5 text-xs text-muted-foreground">
+          <p className="ml-6 mt-2 text-xs text-muted-foreground">
             {parts.length > 0 ? parts.join(' · ') : '暂无待处理事项'}
           </p>
         </button>
@@ -139,15 +142,15 @@ function RecentCard({
   const activities = useRecentActivity(2);
 
   return (
-    <Card className="rounded-2xl py-4">
-      <CardContent className="space-y-2.5">
+    <Card className="rounded-2xl py-4.5">
+      <CardContent className="space-y-3">
         <div className="flex items-center gap-2">
           <ClockIcon className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm font-medium">最近动态</span>
         </div>
 
         {upcoming && (
-          <div className="flex items-start gap-3 border-b pb-2">
+          <div className="flex items-start gap-3 border-b pb-2.5">
             <CalendarDaysIcon className="mt-0.5 h-4 w-4 shrink-0 text-rose-500" />
             <p className="text-xs leading-relaxed">
               <span className="text-muted-foreground">距离下一次{upcoming.name}还剩</span>
@@ -160,7 +163,7 @@ function RecentCard({
         )}
 
         {activities.length > 0 && (
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             {activities.map((a) => (
               <div key={`${a.type}-${a.id}`} className="flex items-start gap-3">
                 {a.type === 'task' ? (
