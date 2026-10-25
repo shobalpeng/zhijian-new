@@ -56,15 +56,14 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
+          # ⚠️ 块标量（|）里的 # 是内容不是注释，写在块内会变成非法 tag / build-arg
+          # 版本标签：手动触发用 inputs.tag，打 tag 触发用 tag 名（如 v1.0.3）；始终同时推 latest
           tags: |
-            # 版本标签：手动触发用 inputs.tag，打 tag 触发用 tag 名（如 v1.0.2）
             ${{ env.IMAGE_NAME }}:${{ inputs.tag || github.ref_name }}
-            # 始终同时推 latest，方便 NAS 上用 :latest 拉最新版本
             ${{ env.IMAGE_NAME }}:latest
+          # 不要写 VITE_POCKETBASE_URL="" —— 引号会进值里导致前端拿到空串地址；
+          # 同域部署时直接不传这个参数（Dockerfile 里默认空 → 前端走 window.location.origin）
           build-args: |
-            # 不要写 VITE_POCKETBASE_URL="" —— 引号会被当成值的字面量传进去，
-            # 前端就会拿 `""` 当后端地址，拼出 /login/""/api/... 这种废路径。
-            # 需要同域部署时直接**不要传这个参数**（Dockerfile 里默认就是空 → 前端走同域）。
             NPM_REGISTRY=https://registry.npmjs.org
           cache-from: type=gha
           cache-to: type=gha,mode=max
