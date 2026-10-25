@@ -1,5 +1,6 @@
-import { Link } from 'react-router-dom';
-import { MapIcon } from '@heroicons/react/24/outline';
+import { Link, useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { MapIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { useCollection } from '@/hooks/use-collection';
 import { EmptyState, LoadMoreButton, LoadingText, PageHeader } from '@/components/common/list-parts';
 import { ImageCarousel } from '@/components/common/image-carousel';
@@ -17,7 +18,17 @@ interface Wander {
 }
 
 export function WandersPage() {
+  const navigate = useNavigate();
   const list = useCollection<Wander>('wanders', { sort: '-date' });
+
+  const remove = async (w: Wander) => {
+    try {
+      await list.remove(w.id);
+      toast.success('已删除');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : '删除失败');
+    }
+  };
 
   return (
     <div className="space-y-4 pb-4">
@@ -38,8 +49,7 @@ export function WandersPage() {
       ) : (
         <div className="space-y-3">
           {list.records.map((w) => (
-            <Link key={w.id} to={`/wanders/${w.id}`} className="block">
-              <Card className="rounded-2xl">
+            <Card key={w.id} className="rounded-2xl">
               <CardContent className="space-y-3 pt-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex min-w-0 items-start gap-2">
@@ -48,6 +58,25 @@ export function WandersPage() {
                       <p className="truncate font-medium">{w.location}</p>
                       <p className="text-xs text-muted-foreground">{formatDate(w.date)}</p>
                     </div>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-1">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="rounded-xl text-muted-foreground"
+                      aria-label="编辑"
+                      onClick={() => navigate(`/wanders/${w.id}/edit`)}
+                    >
+                      <PencilIcon className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="rounded-xl text-muted-foreground"
+                      onClick={() => void remove(w)}
+                    >
+                      <TrashIcon className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
 
@@ -59,7 +88,6 @@ export function WandersPage() {
                 />
               </CardContent>
             </Card>
-            </Link>
           ))}
         </div>
 

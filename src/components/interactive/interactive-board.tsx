@@ -5,8 +5,10 @@ import {
   CheckCircleIcon,
   ChevronRightIcon,
   ClockIcon,
+  PencilIcon,
   PlusIcon,
   SparklesIcon,
+  TrashIcon,
 } from '@heroicons/react/24/outline';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -173,7 +175,26 @@ function ItemCard({
                   <ClockIcon className="h-4 w-4" />
                   {cfg.waitForCounterpart}
                 </span>
-                {/* 编辑 / 删除已移到详情页，列表只保留状态流转操作 */}
+                <Button
+                  asChild
+                  size="sm"
+                  variant="ghost"
+                  className="rounded-xl text-muted-foreground"
+                >
+                  <Link to={`/${kind}/${item.id}/edit`} aria-label="编辑">
+                    <PencilIcon className="h-4 w-4" />
+                  </Link>
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="rounded-xl text-muted-foreground"
+                  aria-label="删除"
+                  disabled={busy}
+                  onClick={() => void run(() => actions.remove(item.id), '已删除')}
+                >
+                  <TrashIcon className="h-4 w-4" />
+                </Button>
               </>
             )}
           </div>

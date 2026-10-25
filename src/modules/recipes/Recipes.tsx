@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { SparklesIcon } from '@heroicons/react/24/outline';
+import { PencilIcon, SparklesIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
 import { StarIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '@/components/auth-provider';
@@ -79,6 +79,7 @@ function CookRating({
 
 export function RecipesPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const recipes = useCollection<Recipe>('recipes', { sort: '-created_at' });
   const cooks = useCollection<CookHistory>('cook_history', {
     sort: '-created_at',
@@ -114,6 +115,15 @@ export function RecipesPage() {
     }
   };
 
+  const remove = async (r: Recipe) => {
+    try {
+      await recipes.remove(r.id);
+      toast.success('已删除');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : '删除失败');
+    }
+  };
+
   return (
     <div className="space-y-4 pb-4">
       <PageHeader
@@ -139,8 +149,7 @@ export function RecipesPage() {
               : null;
 
             return (
-              <Link key={r.id} to={`/recipes/${r.id}`} className="block">
-              <Card className="rounded-2xl">
+              <Card key={r.id} className="rounded-2xl">
                 <CardContent className="space-y-3 pt-4">
                   <CoverImage
                     collectionId={COLLECTION_ID.recipes}
@@ -164,6 +173,25 @@ export function RecipesPage() {
                       </div>
                     </div>
 
+                    <div className="flex shrink-0 items-center gap-1">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="rounded-xl text-muted-foreground"
+                        aria-label="编辑"
+                        onClick={() => navigate(`/recipes/${r.id}/edit`)}
+                      >
+                        <PencilIcon className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="rounded-xl text-muted-foreground"
+                        onClick={() => void remove(r)}
+                      >
+                        <TrashIcon className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
 
                   {r.ingredients && (
@@ -201,7 +229,6 @@ export function RecipesPage() {
                   </Button>
                 </CardContent>
               </Card>
-              </Link>
             );
           })}
         </div>

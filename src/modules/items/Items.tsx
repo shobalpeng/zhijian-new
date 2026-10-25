@@ -1,6 +1,6 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { ArchiveBoxIcon } from '@heroicons/react/24/outline';
+import { ArchiveBoxIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { useCollection } from '@/hooks/use-collection';
 import { CoverImage, EmptyState, LoadMoreButton, LoadingText, PageHeader } from '@/components/common/list-parts';
 import { Badge } from '@/components/ui/badge';
@@ -43,7 +43,17 @@ function dailyCost(item: Item): { days: number; perDay: number } {
 }
 
 export function ItemsPage() {
+  const navigate = useNavigate();
   const list = useCollection<Item>('items', { sort: '-date' });
+
+  const remove = async (it: Item) => {
+    try {
+      await list.remove(it.id);
+      toast.success('已删除');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : '删除失败');
+    }
+  };
 
   const retire = async (it: Item) => {
     try {
@@ -93,10 +103,10 @@ export function ItemsPage() {
                   rows.map((it) => {
                     const { days, perDay } = dailyCost(it);
                     return (
-                      <Link key={it.id} to={`/items/${it.id}`} className="block">
-                        <Card
-                          className={`rounded-2xl border-l-4 ${CATEGORY_BAR[it.category] ?? CATEGORY_BAR['其他']}`}
-                        >
+                      <Card
+                        key={it.id}
+                        className={`rounded-2xl border-l-4 ${CATEGORY_BAR[it.category] ?? CATEGORY_BAR['其他']}`}
+                      >
                         <CardContent className="flex items-start gap-3 pt-4">
                           <CoverImage
                             collectionId={COLLECTION_ID.items}
@@ -137,11 +147,27 @@ export function ItemsPage() {
                                   <ArchiveBoxIcon className="h-4 w-4" />
                                 </Button>
                               )}
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-8 w-8 rounded-xl text-muted-foreground"
+                                aria-label="编辑"
+                                onClick={() => navigate(`/items/${it.id}/edit`)}
+                              >
+                                <PencilIcon className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-8 w-8 rounded-xl text-muted-foreground"
+                                onClick={() => void remove(it)}
+                              >
+                                <TrashIcon className="h-4 w-4" />
+                              </Button>
                             </div>
                           </div>
                         </CardContent>
                       </Card>
-                        </Link>
                     );
                   })
                 )}

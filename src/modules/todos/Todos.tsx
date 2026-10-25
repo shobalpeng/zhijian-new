@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
   ArrowDownIcon,
   ArrowUpIcon,
   ArchiveBoxIcon,
   CheckIcon,
+  TrashIcon,
 } from '@heroicons/react/24/outline';
 import { useAuth } from '@/components/auth-provider';
 import { useCollection } from '@/hooks/use-collection';
@@ -122,6 +122,15 @@ export function TodosPage() {
     }
   };
 
+  const remove = async (t: Todo) => {
+    try {
+      await list.remove(t.id);
+      toast.success('已删除');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : '删除失败');
+    }
+  };
+
   /** 与相邻项交换 sort_order */
   const move = async (rows: Todo[], index: number, dir: -1 | 1) => {
     const target = index + dir;
@@ -208,15 +217,14 @@ export function TodosPage() {
                           aria-label="完成"
                           className="mt-0.5"
                         />
-                        <Link
-                          to={`/todos/${t.id}`}
+                        <span
                           className={cn(
                             'min-w-0 flex-1 whitespace-pre-wrap break-words text-sm',
                             t.done && 'text-muted-foreground line-through',
                           )}
                         >
                           {t.content}
-                        </Link>
+                        </span>
 
                         <div className="flex shrink-0 items-center gap-0.5">
                           <Button
@@ -247,6 +255,15 @@ export function TodosPage() {
                             onClick={() => void archive(t)}
                           >
                             {t.archived ? <CheckIcon className="h-3.5 w-3.5" /> : <ArchiveBoxIcon className="h-3.5 w-3.5" />}
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8 rounded-xl text-muted-foreground"
+                            aria-label="删除"
+                            onClick={() => void remove(t)}
+                          >
+                            <TrashIcon className="h-3.5 w-3.5" />
                           </Button>
                         </div>
                       </CardContent>
