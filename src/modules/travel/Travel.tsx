@@ -11,7 +11,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useAuth } from '@/components/auth-provider';
 import { useCollection } from '@/hooks/use-collection';
-import { FormDialog, type FieldDef } from '@/components/common/form-dialog';
+import { ExpenseForm, type ExpenseFormValue } from '@/components/common/expense-form';
 import { CoverImage, EmptyState, LoadMoreButton, LoadingText, PageHeader } from '@/components/common/list-parts';
 import { ExpenseGroupList, ExpenseSummary } from '@/components/common/travel-expenses';
 import { Badge } from '@/components/ui/badge';
@@ -63,35 +63,6 @@ const TravelMap = lazy(() =>
   import('@/components/common/travel-map').then((m) => ({ default: m.TravelMap })),
 );
 
-const EXPENSE_FIELDS: FieldDef[] = [
-  {
-    name: 'category',
-    label: '类别',
-    type: 'select',
-    required: true,
-    options: [
-      { label: '交通', value: 'transport' },
-      { label: '住宿', value: 'accommodation' },
-      { label: '餐饮', value: 'dining' },
-      { label: '门票', value: 'tickets' },
-      { label: '购物', value: 'shopping' },
-      { label: '其他', value: 'other' },
-    ],
-  },
-  { name: 'amount', label: '金额', type: 'number', required: true, min: 0, placeholder: '元' },
-  {
-    name: 'payer',
-    label: '付款方',
-    type: 'select',
-    required: true,
-    options: [
-      { label: '我', value: 'me' },
-      { label: 'Ta', value: 'partner' },
-    ],
-  },
-  { name: 'note', label: '备注', type: 'text' },
-];
-
 const CATEGORY_LABEL: Record<string, string> = {
   transport: '交通',
   accommodation: '住宿',
@@ -108,7 +79,6 @@ export function TravelPage() {
   const expenses = useCollection<Expense>('expenses', { sort: '-created_at' });
 
   const [active, setActive] = useState<Destination | null>(null);
-  const [expenseOpen, setExpenseOpen] = useState(false);
   const [search, setSearch] = useState('');
 
   const keyword = search.trim().toLowerCase();
@@ -132,42 +102,46 @@ export function TravelPage() {
     return map;
   }, [expenses.allRecords]);
 
-  /** 全局「记一笔」的目标地（用于费用汇总 tab） */
-  const [globalDestId, setGlobalDestId] = useState('');
-  const globalDest = dests.allRecords.find((d) => d.id === globalDestId) ?? null;
+  /**
+   * 「添加花费」表单的展开状态。
+   * 两处入口（详情弹窗 / 花费汇总 tab）各自独立，用 key 区分。
+   */
+  const [expenseFormKey, setExpenseFormKey] = useState<string | null>(null);
+  const [expenseSaving, setExpenseSaving] = useState(false);
 
   /**
-   * 这张「记一笔」表单是给哪个目的地用的。
-   * 不能直接用 active：详情弹窗关掉时 active 会被置空，表单还在开着就会丢失目标。
+   * 写入一笔花费。
+   *
+   * payer 在数据库里以「目的地创建者」为参照（me = 创建者付）。
+   * 表单里是相对当前用户的「我/Ta」，所以非创建者填写时要互换，否则结算方向会反。
    */
-  const [expenseTarget, setExpenseTarget] = useState<Destination | null>(null);
-
-  const openExpenseFor = (dest: Destination | null) => {
-    if (!dest) return;
-    setExpenseTarget(dest);
-    setExpenseOpen(true);
-  };
-
-  const createExpense = async (fd: FormData) => {
-    const target = expenseTarget;
+  const createExpense = async (value: ExpenseFormValue) => {
+    const target = dests.allRecords.find((d) => d.id === value.destination);
     if (!target) {
       toast.error('没有选择目的地');
       return;
     }
 
-    // payer 在数据库里以「目的地创建者」为参照（me = 创建者付）。
-    // 表单里是相对当前用户的「我/Ta」，所以非创建者填写时要互换，否则结算方向会反。
+    let payer = value.payer;
     if (target.creator !== user?.id) {
-      const picked = String(fd.get('payer') ?? 'me');
-      fd.set('payer', picked === 'me' ? 'partner' : 'me');
+      payer = payer === 'me' ? 'partner' : 'me';
     }
 
-    fd.append('destination', target.id);
+    setExpenseSaving(true);
     try {
-      await expenses.create(fd);
-      setExpenseOpen(false);
+      await expenses.create({
+        destination: target.id,
+        category: value.category,
+        amount: value.amount,
+        payer,
+        note: value.note,
+      });
+      toast.success('已记录');
+      setExpenseFormKey(null);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : '添加失败');
+    } finally {
+      setExpenseSaving(false);
     }
   };
 
@@ -366,6 +340,27 @@ export function TravelPage() {
 
           {/* 花费汇总（对齐 V1 的 ExpenseSummary + ExpenseList） */}
           <TabsContent value="expenses" className="space-y-3 pt-2">
+            {/* 添加花费：内联表单（同 V1，一次填完）。
+                空状态时也要有入口，否则一条花费都记不进来。 */}
+            {expenseFormKey === 'global' ? (
+              <ExpenseForm
+                destinations={dests.allRecords}
+                onSubmit={createExpense}
+                onCancel={() => setExpenseFormKey(null)}
+                submitting={expenseSaving}
+                submitLabel="记录"
+              />
+            ) : (
+              <Button
+                variant="outline"
+                className="w-full rounded-xl"
+                onClick={() => setExpenseFormKey('global')}
+              >
+                <PlusIcon className="mr-1 h-4 w-4" />
+                添加花费
+              </Button>
+            )}
+
             {expenses.allRecords.length === 0 ? (
               <EmptyState text="还没有花费记录" />
             ) : (
@@ -375,33 +370,6 @@ export function TravelPage() {
                   destinations={dests.allRecords}
                   currentUserId={user?.id}
                 />
-
-                <div className="rounded-2xl bg-card p-4 ring-1 ring-foreground/10">
-                  <p className="mb-2 text-sm font-medium">添加花费</p>
-                  <div className="flex gap-2">
-                    <select
-                      value={globalDestId}
-                      onChange={(e) => setGlobalDestId(e.target.value)}
-                      className="min-w-0 flex-1 rounded-xl border bg-background px-3 py-2 text-sm"
-                      aria-label="选择目的地"
-                    >
-                      <option value="">选择目的地</option>
-                      {dests.allRecords.map((d) => (
-                        <option key={d.id} value={d.id}>
-                          {d.name}
-                        </option>
-                      ))}
-                    </select>
-                    <Button
-                      className="rounded-xl"
-                      disabled={!globalDest}
-                      onClick={() => openExpenseFor(globalDest)}
-                    >
-                      <PlusIcon className="mr-1 h-4 w-4" />
-                      记一笔
-                    </Button>
-                  </div>
-                </div>
 
                 <ExpenseGroupList
                   expenses={expenses.allRecords}
@@ -430,30 +398,31 @@ export function TravelPage() {
               }}
               onDelete={() => void remove(active)}
               onMarkVisited={() => void markVisited(active)}
-              onAddExpense={() => openExpenseFor(active)}
+              onAddExpense={() => setExpenseFormKey('detail')}
               onRemoveExpense={removeExpense}
+              expenseForm={
+                expenseFormKey === 'detail' ? (
+                  <ExpenseForm
+                    destinations={dests.allRecords}
+                    fixedDestinationId={active.id}
+                    onSubmit={createExpense}
+                    onCancel={() => setExpenseFormKey(null)}
+                    submitting={expenseSaving}
+                    submitLabel="记录"
+                  />
+                ) : null
+              }
             />
           )}
         </DialogContent>
       </Dialog>
 
-      <FormDialog
-        title="记一笔花费"
-        fields={EXPENSE_FIELDS}
-        open={expenseOpen}
-        onOpenChange={(v) => {
-          setExpenseOpen(v);
-          if (!v) setExpenseTarget(null);
-        }}
-        onSubmit={createExpense}
-        submitLabel="记录"
+      <LoadMoreButton
+        hasMore={dests.hasMore}
+        remaining={dests.remaining}
+        loading={dests.loadingMore}
+        onClick={() => void dests.loadMore()}
       />
-        <LoadMoreButton
-          hasMore={dests.hasMore}
-          remaining={dests.remaining}
-          loading={dests.loadingMore}
-          onClick={() => void dests.loadMore()}
-        />
     </div>
   );
 }
@@ -467,6 +436,7 @@ function DestinationDetail({
   onMarkVisited,
   onAddExpense,
   onRemoveExpense,
+  expenseForm,
 }: {
   dest: Destination;
   expenses: Expense[];
@@ -476,6 +446,8 @@ function DestinationDetail({
   onMarkVisited: () => void;
   onAddExpense: () => void;
   onRemoveExpense: (id: string) => void;
+  /** 展开的「添加花费」内联表单（null = 未展开） */
+  expenseForm?: React.ReactNode;
 }) {
   // payer 字段以「目的地创建者」为参照：me = 创建者付，partner = 对方付。
   // 当前查看者不是创建者时，视角要对调。
@@ -561,11 +533,16 @@ function DestinationDetail({
         <div className="rounded-xl bg-muted/40 p-3">
           <div className="flex items-center justify-between">
             <p className="text-sm font-medium">花费</p>
-            <Button size="sm" variant="outline" className="rounded-xl" onClick={onAddExpense}>
-              <PlusIcon className="mr-1 h-4 w-4" />
-              记一笔
-            </Button>
+            {!expenseForm && (
+              <Button size="sm" variant="outline" className="rounded-xl" onClick={onAddExpense}>
+                <PlusIcon className="mr-1 h-4 w-4" />
+                记一笔
+              </Button>
+            )}
           </div>
+
+          {/* 展开的「添加花费」内联表单 */}
+          {expenseForm && <div className="mt-3">{expenseForm}</div>}
 
           {expenses.length === 0 ? (
             <p className="mt-2 text-xs text-muted-foreground">还没有记录花费</p>
@@ -584,8 +561,7 @@ function DestinationDetail({
                       <span className="tabular-nums">{formatMoney(e.amount)}</span>
                       <span className="text-xs text-muted-foreground">
                         {(e.payer === 'me') === isCreator ? '我' : 'Ta'}
-                      </span>
-                      <button
+                      </span>                      <button
                         type="button"
                         aria-label="删除"
                         className="rounded p-1 text-muted-foreground hover:text-destructive"

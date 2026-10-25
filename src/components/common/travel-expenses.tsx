@@ -64,6 +64,8 @@ export interface ResolvedExpense {
   theirs: number;
   /** 当前查看者是不是这个目的地的创建者 */
   isCreator: boolean;
+  /** 这笔钱是不是当前查看者付的（比金额更可靠，金额为 0 时也不会误判） */
+  paidByMe: boolean;
 }
 
 /**
@@ -84,18 +86,13 @@ export function resolveExpenses(
     const isCreator = !!currentUserId && creator === currentUserId;
     const amount = expense.amount || 0;
     // 我付的是「对方创建的目的地里 payer='partner' 的那些」或「我创建的里 payer='me' 的那些」
-    const mine = isCreator
-      ? expense.payer === 'me'
-        ? amount
-        : 0
-      : expense.payer === 'partner'
-        ? amount
-        : 0;
+    const paidByMe = isCreator ? expense.payer === 'me' : expense.payer === 'partner';
     return {
       expense,
-      mine,
-      theirs: amount - mine,
+      mine: paidByMe ? amount : 0,
+      theirs: paidByMe ? 0 : amount,
       isCreator,
+      paidByMe,
     };
   });
 }
@@ -241,7 +238,7 @@ export function ExpenseGroupList({
                     {formatMoney(r.expense.amount)}
                   </span>
                   <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
-                    {r.mine > 0 ? '我' : 'Ta'}
+                    {r.paidByMe ? '我' : 'Ta'}
                   </span>
                   {onRemove && (
                     <button
