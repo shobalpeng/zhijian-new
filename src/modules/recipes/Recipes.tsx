@@ -246,6 +246,7 @@ export function RecipesPage() {
             <CookRating value={rating} onChange={setRating} />
         <LoadMoreButton
           hasMore={recipes.hasMore}
+          remaining={recipes.remaining}
           loading={recipes.loadingMore}
           onClick={() => void recipes.loadMore()}
         />

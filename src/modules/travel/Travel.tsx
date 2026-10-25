@@ -273,6 +273,7 @@ export function TravelPage() {
       />
         <LoadMoreButton
           hasMore={dests.hasMore}
+          remaining={dests.remaining}
           loading={dests.loadingMore}
           onClick={() => void dests.loadMore()}
         />

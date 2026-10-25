@@ -62,6 +62,8 @@ export function useInteractiveItems(kind: InteractiveKind) {
   const [items, setItems] = useState<InteractiveItem[]>([]);
   /** 全量数据（仅用于统计口径，不用于渲染列表） */
   const [allItems, setAllItems] = useState<InteractiveItem[]>([]);
+  /** 总条数 */
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   /** 「加载更多」进行中（与首屏 loading 分开，避免整页转圈） */
   const [loadingMore, setLoadingMore] = useState(false);
@@ -90,6 +92,7 @@ export function useInteractiveItems(kind: InteractiveKind) {
         ]);
         setItems(res.items.map((r) => toInteractiveItem(r, kind)));
         if (all) setAllItems(all.items.map((r) => toInteractiveItem(r, kind)));
+        setTotal(res.totalItems);
         pageRef.current = targetPage;
         setHasMore(res.totalItems > res.items.length);
       } catch {
@@ -173,6 +176,10 @@ export function useInteractiveItems(kind: InteractiveKind) {
     items,
     /** 全量数据：统计用它 */
     allItems,
+    /** 总条数 */
+    total,
+    /** 还剩多少条没加载出来 */
+    remaining: Math.max(0, total - items.length),
     loading,
     loadingMore,
     hasMore,

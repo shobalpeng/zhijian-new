@@ -41,10 +41,13 @@ export function LoadingText() {
 export function LoadMoreButton({
   hasMore,
   loading,
+  remaining,
   onClick,
 }: {
   hasMore: boolean;
   loading?: boolean;
+  /** 还剩多少条没加载出来（显示在按钮上） */
+  remaining?: number;
   onClick: () => void;
 }) {
   if (!hasMore) return null;
@@ -57,7 +60,7 @@ export function LoadMoreButton({
         disabled={loading}
         aria-busy={loading}
       >
-        {loading ? '加载中…' : '加载更多'}
+        {loading ? '加载中…' : remaining ? `加载更多（剩余 ${remaining} 条）` : '加载更多'}
       </Button>
     </div>
   );

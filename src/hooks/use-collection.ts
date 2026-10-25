@@ -45,6 +45,8 @@ export function useCollection<T = Record<string, unknown>>(
   const [records, setRecords] = useState<T[]>([]);
   /** 全量数据（仅用于统计/搜索，不用于渲染列表）——统计口径必须是全部数据，不能只统计已加载的一页 */
   const [allRecords, setAllRecords] = useState<T[]>([]);
+  /** 该集合对当前用户可见的总条数 */
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   /** 「加载更多」进行中（与首屏 loading 分开，避免整页转圈） */
   const [loadingMore, setLoadingMore] = useState(false);
@@ -74,6 +76,7 @@ export function useCollection<T = Record<string, unknown>>(
       ]);
       setRecords(res.items as unknown as T[]);
       if (all) setAllRecords(all.items as unknown as T[]);
+      setTotal(res.totalItems);
       pageRef.current = targetPage;
       setHasMore(res.totalItems > res.items.length);
       setError(null);
@@ -143,6 +146,10 @@ export function useCollection<T = Record<string, unknown>>(
     records,
     /** 全量数据：统计与搜索用它，不要用分页后的 records */
     allRecords,
+    /** 总条数（当前用户可见） */
+    total,
+    /** 还剩多少条没加载出来 */
+    remaining: Math.max(0, total - records.length),
     loading,
     loadingMore,
     hasMore,

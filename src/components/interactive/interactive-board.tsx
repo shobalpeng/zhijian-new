@@ -206,8 +206,19 @@ function ItemCard({
 
 /** tasks / wishes 共用的列表页：状态分组 + 新建入口（独立整页表单）+ 提交/确认 + 详情入口 */
 export function InteractiveBoard({ kind }: { kind: InteractiveKind }) {
-  const { items, allItems, loading, loadingMore, hasMore, loadMore, meId, submit, confirm, remove } =
-    useInteractiveItems(kind);
+  const {
+    items,
+    allItems,
+    loading,
+    loadingMore,
+    hasMore,
+    remaining,
+    loadMore,
+    meId,
+    submit,
+    confirm,
+    remove,
+  } = useInteractiveItems(kind);
   const cfg = KIND_CONFIG[kind];
   const actions = { submit, confirm, remove };
 
@@ -280,7 +291,12 @@ export function InteractiveBoard({ kind }: { kind: InteractiveKind }) {
         ))}
       </Tabs>
 
-      <LoadMoreButton hasMore={hasMore} loading={loadingMore} onClick={() => void loadMore()} />
+      <LoadMoreButton
+        hasMore={hasMore}
+        loading={loadingMore}
+        remaining={remaining}
+        onClick={() => void loadMore()}
+      />
     </div>
   );
 }

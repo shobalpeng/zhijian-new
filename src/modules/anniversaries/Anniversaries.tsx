@@ -133,6 +133,7 @@ export function AnniversariesPage() {
       <p className="pt-1 text-center text-xs text-muted-foreground">今天是 {today()}</p>
         <LoadMoreButton
           hasMore={list.hasMore}
+          remaining={list.remaining}
           loading={list.loadingMore}
           onClick={() => void list.loadMore()}
         />

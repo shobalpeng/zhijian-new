@@ -180,6 +180,7 @@ export function ItemsPage() {
 
         <LoadMoreButton
           hasMore={list.hasMore}
+          remaining={list.remaining}
           loading={list.loadingMore}
           onClick={() => void list.loadMore()}
         />
