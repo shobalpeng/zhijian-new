@@ -54,6 +54,14 @@ function RatingStars({ value, onChange }: { value: number; onChange: (v: number)
   );
 }
 
+/** 按常见分隔符（、，,；; 与空格）切分参与人姓名，用于自动推算人数 */
+function countNames(people: string): number {
+  return people
+    .split(/[、,，;；\s]+/)
+    .map((x) => x.trim())
+    .filter(Boolean).length;
+}
+
 /**
  * 记录 / 编辑聚餐（对齐 V1 的独立整页表单）：
  * 餐厅名、日期、照片（虚线框多图）、参与人、菜品、总价/人数/人均一行、味道评分、点评、底部整宽按钮。
@@ -70,6 +78,8 @@ export function DineFormPage() {
   const [date, setDate] = useState(today());
   const [people, setPeople] = useState('');
   const [peopleCount, setPeopleCount] = useState('');
+  /** 手动改过人数后就不再被「参与人」自动覆盖（编辑旧记录时也靠它保住原值） */
+  const [countTouched, setCountTouched] = useState(false);
   const [dishes, setDishes] = useState('');
   const [cost, setCost] = useState('');
   const [rating, setRating] = useState(0);
@@ -91,6 +101,7 @@ export function DineFormPage() {
         setDate(rec.date?.slice(0, 10) || today());
         setPeople(rec.people ?? '');
         setPeopleCount(rec.people_count != null ? String(rec.people_count) : '');
+        setCountTouched(true);
         setDishes(rec.dishes ?? '');
         setCost(rec.cost != null ? String(rec.cost) : '');
         setRating(rec.rating ?? 0);
@@ -234,7 +245,15 @@ export function DineFormPage() {
           <Input
             id="dine-people"
             value={people}
-            onChange={(e) => setPeople(e.target.value)}
+            onChange={(e) => {
+              const v = e.target.value;
+              setPeople(v);
+              // 没手动改过人数时，按姓名个数自动填（之后仍可手动改）
+              if (!countTouched) {
+                const n = countNames(v);
+                setPeopleCount(n > 0 ? String(n) : '');
+              }
+            }}
             placeholder="如：和Ta、小李"
           />
         </div>
@@ -275,7 +294,10 @@ export function DineFormPage() {
               inputMode="numeric"
               min="1"
               value={peopleCount}
-              onChange={(e) => setPeopleCount(e.target.value)}
+              onChange={(e) => {
+                setPeopleCount(e.target.value);
+                setCountTouched(true);
+              }}
               placeholder="0"
               className="h-7 w-16 text-xs"
             />

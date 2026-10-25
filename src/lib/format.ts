@@ -32,7 +32,7 @@ export function fileUrl(
   thumb?: string,
 ) {
   if (!filename) return '';
-  return pb.files.getUrl({ collectionId, id: recordId } as never, filename, thumb ? { thumb } : undefined);
+  return pb.files.getURL({ collectionId, id: recordId } as never, filename, thumb ? { thumb } : undefined);
 }
 
 /** 多图字段（string[] | string）统一转成可用的 URL 数组 */

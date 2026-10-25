@@ -49,7 +49,7 @@ export function PartnerSettingsPage() {
   };
 
   const partnerAvatar = partner?.avatar
-    ? pb.files.getUrl({ collectionId: '_pb_users_auth_', id: partner.id } as never, partner.avatar)
+    ? pb.files.getURL({ collectionId: '_pb_users_auth_', id: partner.id } as never, partner.avatar)
     : '';
   const partnerName = partner ? partner.name || partner.username : '';
 

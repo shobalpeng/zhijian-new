@@ -26,7 +26,7 @@ export function MePage() {
   const navigate = useNavigate();
 
   const avatarUrl = user?.avatar
-    ? pb.files.getUrl({ collectionId: '_pb_users_auth_', id: user.id } as never, user.avatar)
+    ? pb.files.getURL({ collectionId: '_pb_users_auth_', id: user.id } as never, user.avatar)
     : '';
   const name = user?.name || user?.username || '未命名';
   const partnerName = partner ? partner.name || partner.username : '未绑定';
