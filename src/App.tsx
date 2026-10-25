@@ -1,47 +1,56 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { MainLayout } from '@/components/layout';
 import { ThemeProvider } from '@/components/theme-provider';
+import { ThemeSync } from '@/components/theme-sync';
 import { AuthProvider } from '@/components/auth-provider';
-import { ModuleMenuProvider } from '@/components/module-menu-provider';
-import { SettingsProvider } from '@/lib/use-settings';
-import { Profile } from '@/pages/Profile';
 import { LoginPage } from '@/pages/Login';
 import { RegisterPage } from '@/pages/Register';
 import { NotFound } from '@/pages/NotFound';
 import { Toaster } from 'sonner';
 
-import { ProtectedRoute } from '@/components/protected-route';
+/**
+ * 织间自己的业务模块。pocketstack 脚手架还带了 examples / settings / menu / modules / user
+ * 这些管理后台 demo 页，它们会被 import.meta.glob 一并注册成真实路由（可被直接访问），
+ * 与情侣 App 无关，因此这里做白名单过滤——只注册业务模块。
+ */
+const APP_MODULES = new Set([
+  'home',
+  'tasks',
+  'wishes',
+  'recipes',
+  'anniversaries',
+  'travel',
+  'wanders',
+  'dines',
+  'items',
+  'todos',
+  'me',
+  'pair',
+]);
 
-// 自动导入 modules 目录下的所有模块路由
 const moduleRoutes = import.meta.glob('./modules/*/routes.tsx', { eager: true });
-const autoRoutes = Object.values(moduleRoutes).map((mod: any) => {
-  // 支持 export const routes = ... 或 export default ...
-  return mod.routes || mod.default;
-});
+
+const autoRoutes = Object.entries(moduleRoutes)
+  .filter(([path]) => {
+    const name = path.match(/modules\/([^/]+)\//)?.[1] ?? '';
+    return APP_MODULES.has(name);
+  })
+  .map(([, mod]: [string, any]) => mod.routes || mod.default);
 
 export function App() {
   return (
     <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
       <Toaster position="top-center" richColors />
       <AuthProvider>
-        <ModuleMenuProvider>
-          <SettingsProvider>
-            <BrowserRouter>
-              <Routes>
-                {/* 渲染自动注册的模块路由 */}
-                {autoRoutes}
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/register" element={<RegisterPage />} />
-                <Route element={<ProtectedRoute />}>
-                  <Route path="/" element={<MainLayout />}>
-                    <Route path="profile" element={<Profile />} />
-                  </Route>
-                </Route>
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
-          </SettingsProvider>
-        </ModuleMenuProvider>
+        <ThemeSync />
+        <BrowserRouter>
+          <Routes>
+            {/* 各业务模块自带 ProtectedRoute + AppShell */}
+            {autoRoutes}
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
       </AuthProvider>
     </ThemeProvider>
   );

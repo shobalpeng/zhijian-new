@@ -92,8 +92,8 @@ export function Profile() {
       });
 
       // 2. 重新认证以保持登录状态 (PocketBase 修改密码后会使旧 Token 失效)
-      if (user?.email) {
-        await login(user.email, formData.newPassword, isSuperAdmin);
+      if (user?.username) {
+        await login(user.username, formData.newPassword);
       }
 
       setFormData({ ...formData, oldPassword: '', newPassword: '', confirmPassword: '' });

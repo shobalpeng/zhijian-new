@@ -49,7 +49,7 @@ export function UserOnlyRoute({ children }: { children?: React.ReactNode }) {
   }
 
   if (!isValid || isSuperAdmin) {
-    return <Navigate to="/admin/dashboard" replace />;
+    return <Navigate to="/" replace />;
   }
 
   return children ? <>{children}</> : <Outlet />;

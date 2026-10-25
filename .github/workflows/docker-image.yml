@@ -1,0 +1,105 @@
+name: 构建 Docker 镜像
+
+# 触发方式：
+#   1. 手动：Actions 页面 → Build Docker image → Run workflow
+#   2. 打标签：git push origin v1.0.0
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: '镜像标签（留空用 latest）'
+        required: false
+        default: 'latest'
+      push_latest:
+        description: '同时把 latest 指向这个版本'
+        type: boolean
+        default: true
+  push:
+    tags:
+      - 'v*'
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 生成镜像名（仓库名必须小写）
+        run: |
+          owner=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')
+          echo "IMAGE_NAME=${{ env.REGISTRY }}/${owner}/zhijian" >> "$GITHUB_ENV"
+          echo "镜像名: ${{ env.REGISTRY }}/${owner}/zhijian"
+
+      - name: 准备 QEMU（用于跨架构编译 arm64）
+        uses: docker/setup-qemu-action@v3
+
+      - name: 准备 Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 登录 GitHub 容器仓库
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 构建并推送（amd64 + arm64）
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAME }}:${{ inputs.tag || github.ref_name }}
+            ${{ inputs.tag && inputs.push_latest && format('{0}:latest', env.IMAGE_NAME) || '' }}
+          build-args: |
+            VITE_POCKETBASE_URL=""
+            NPM_REGISTRY=https://registry.npmjs.org
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: 输出镜像信息
+        run: |
+          echo "=============================="
+          echo "构建完成：${{ env.IMAGE_NAME }}:${{ inputs.tag || github.ref_name }}"
+          echo "架构：linux/amd64, linux/arm64（NAS 上会自动选匹配的）"
+          echo "=============================="
+
+      # ---------- 可选：构建完直接部署到 NAS ----------
+      # 需要在仓库 Settings → Secrets 里配置：
+      #   NAS_SSH_HOST    NAS 的 IP 或域名
+      #   NAS_SSH_USER    SSH 用户名
+      #   NAS_SSH_KEY     SSH 私钥全文（用 cat ~/.ssh/id_ed25519 复制）
+      #   NAS_APP_DIR     应用目录，例如 /volume1/docker/zhijian
+      #   GHCR_TOKEN      GitHub PAT（权限勾 read:packages），用于在 NAS 上登录 ghcr.io
+      #                    ⚠️ 不能用 GITHUB_TOKEN：它只在本次运行内有效，NAS 之后 pull 会失败
+      - name: 部署到 NAS（配置了 SSH secret 时才执行）
+        if: ${{ secrets.NAS_SSH_HOST != '' }}
+        env:
+          NAS_SSH_HOST: ${{ secrets.NAS_SSH_HOST }}
+          NAS_SSH_USER: ${{ secrets.NAS_SSH_USER }}
+          NAS_APP_DIR: ${{ secrets.NAS_APP_DIR }}
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+          IMAGE_TAG: ${{ inputs.tag || github.ref_name }}
+          IMAGE_FULL: ${{ env.IMAGE_NAME }}:${{ inputs.tag || github.ref_name }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.NAS_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+            "$NAS_SSH_USER@$NAS_SSH_HOST" <<REMOTE
+            set -e
+            cd "$NAS_APP_DIR"
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+            docker pull "$IMAGE_FULL"
+            docker compose up -d
+            docker compose ps
+          REMOTE

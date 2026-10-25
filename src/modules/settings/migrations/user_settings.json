@@ -1,0 +1,23 @@
+[
+  {
+    "id": "zj_user_settings",
+    "name": "user_settings",
+    "type": "base",
+    "system": false,
+    "listRule": "@request.auth.id = user || @request.auth.paired_user = user",
+    "viewRule": "@request.auth.id = user || @request.auth.paired_user = user",
+    "createRule": "@request.auth.id != \"\"",
+    "updateRule": "@request.auth.id = user || @request.auth.paired_user = user",
+    "deleteRule": "@request.auth.id = user || @request.auth.paired_user = user",
+    "fields": [
+      { "autogeneratePattern": "[a-z0-9]{15}", "hidden": false, "id": "text_id", "max": 15, "min": 15, "name": "id", "pattern": "^[a-z0-9]+$", "presentable": false, "primaryKey": true, "required": true, "system": true, "type": "text" },
+      { "cascadeDelete": true, "collectionId": "_pb_users_auth_", "hidden": false, "id": "rel_user", "maxSelect": 1, "minSelect": 0, "name": "user", "presentable": false, "required": true, "system": false, "type": "relation" },
+      { "hidden": false, "id": "num_monthly_point_cap", "max": null, "min": null, "name": "monthly_point_cap", "onlyInt": true, "presentable": false, "required": false, "system": false, "type": "number" },
+      { "hidden": false, "id": "sel_theme", "maxSelect": 1, "name": "theme", "presentable": false, "required": true, "system": false, "type": "select", "values": ["light", "dark"] },
+      { "hidden": false, "id": "sel_color_theme", "maxSelect": 1, "name": "color_theme", "presentable": false, "required": false, "system": false, "type": "select", "values": ["blue", "pink", "green", "red", "gray"] }
+    ],
+    "indexes": [
+      "CREATE UNIQUE INDEX `idx_zj_us_user` ON `user_settings` (`user`)"
+    ]
+  }
+]

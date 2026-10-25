@@ -6,6 +6,19 @@ dist
 .env.local
 .vscode
 .trae
-*.md
 LICENSE
-package-lock.json
+
+# 运行期数据与备份（绝不能进镜像）
+.pocketbase
+pb_data
+data
+*.log
+*.bak_before_*
+
+# 打包产物（几百 MB，进上下文会拖垮构建速度）
+dist-nas
+
+# 本地临时文件
+.tmp*
+.trash*
+.DS_Store

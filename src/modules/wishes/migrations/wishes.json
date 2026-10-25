@@ -1,0 +1,28 @@
+[
+  {
+    "id": "zj_wishes",
+    "name": "wishes",
+    "type": "base",
+    "system": false,
+    "listRule": "@request.auth.id = creator || @request.auth.id = fulfiller || @request.auth.paired_user = creator || @request.auth.paired_user = fulfiller",
+    "viewRule": "@request.auth.id = creator || @request.auth.id = fulfiller || @request.auth.paired_user = creator || @request.auth.paired_user = fulfiller",
+    "createRule": "@request.auth.id != \"\"",
+    "updateRule": "@request.auth.id = creator || @request.auth.id = fulfiller || @request.auth.paired_user = creator || @request.auth.paired_user = fulfiller",
+    "deleteRule": "@request.auth.id = creator || @request.auth.paired_user = creator",
+    "fields": [
+      { "autogeneratePattern": "[a-z0-9]{15}", "hidden": false, "id": "text_id", "max": 15, "min": 15, "name": "id", "pattern": "^[a-z0-9]+$", "presentable": false, "primaryKey": true, "required": true, "system": true, "type": "text" },
+      { "autogeneratePattern": "", "hidden": false, "id": "text_title", "max": 0, "min": 0, "name": "title", "pattern": "", "presentable": false, "primaryKey": false, "required": true, "system": false, "type": "text" },
+      { "autogeneratePattern": "", "hidden": false, "id": "text_description", "max": 0, "min": 0, "name": "description", "pattern": "", "presentable": false, "primaryKey": false, "required": false, "system": false, "type": "text" },
+      { "hidden": false, "id": "file_image", "maxSelect": 1, "maxSize": 26214400, "mimeTypes": [], "name": "image", "presentable": false, "required": false, "system": false, "type": "file" },
+      { "hidden": false, "id": "num_points", "max": null, "min": null, "name": "points", "onlyInt": true, "presentable": false, "required": true, "system": false, "type": "number" },
+      { "cascadeDelete": true, "collectionId": "_pb_users_auth_", "hidden": false, "id": "rel_creator", "maxSelect": 1, "minSelect": 0, "name": "creator", "presentable": false, "required": true, "system": false, "type": "relation" },
+      { "cascadeDelete": true, "collectionId": "_pb_users_auth_", "hidden": false, "id": "rel_fulfiller", "maxSelect": 1, "minSelect": 0, "name": "fulfiller", "presentable": false, "required": true, "system": false, "type": "relation" },
+      { "hidden": false, "id": "sel_status", "maxSelect": 1, "name": "status", "presentable": false, "required": true, "system": false, "type": "select", "values": ["pending", "submitted", "confirmed"] },
+      { "hidden": false, "id": "date_submitted_at", "name": "submitted_at", "presentable": false, "required": false, "system": false, "type": "date" },
+      { "hidden": false, "id": "date_confirmed_at", "name": "confirmed_at", "presentable": false, "required": false, "system": false, "type": "date" },
+      { "hidden": false, "id": "autodate_created_at", "name": "created_at", "onCreate": true, "onUpdate": false, "presentable": false, "system": false, "type": "autodate" },
+      { "hidden": false, "id": "autodate_updated_at", "name": "updated_at", "onCreate": true, "onUpdate": true, "presentable": false, "system": false, "type": "autodate" }
+    ],
+    "indexes": []
+  }
+]

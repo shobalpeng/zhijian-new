@@ -28,3 +28,17 @@ cache
 .private/
 .pocketbase/
 __pycache__/
+
+# 迁移报告含临时密码，禁止入库（用完后请删除）
+scripts/migration_report.json
+*.pb.log
+pb_dev.log
+vite_dev.log
+# 离线部署包（大文件，不入库；用 deploy/offline/prepare-offline.* 重新生成）
+deploy/offline/pocketbase-linux-*
+deploy/offline/npm-cache/*
+!deploy/offline/npm-cache/.gitkeep
+dist-nas/
+
+# 模板遗留的 PocketBase 数据目录（空的运行期产物，不入库）
+pb_data/

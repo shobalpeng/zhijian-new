@@ -1,0 +1,35 @@
+# 统一用 LF 换行
+#
+# 为什么必须写死：Docker 构建发生在 Linux 容器里，
+# 如果 CRLF 被提交进仓库，shell 脚本会报 "/bin/sh^M: bad interpreter"，
+# Dockerfile 也会解析失败。
+#
+# 注意：Windows 上编辑这些文件仍可正常保存（编辑器会识别 LF），
+# 只是 git 不会再把它们在工作区里转成 CRLF。
+* text=auto eol=lf
+
+# 以下类型强制 LF（构建与运行时会用到）
+*.sh        text eol=lf
+Dockerfile  text eol=lf
+*.pb.js     text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+*.json      text eol=lf
+*.py        text eol=lf
+*.mjs       text eol=lf
+*.ts        text eol=lf
+*.tsx       text eol=lf
+*.css       text eol=lf
+*.html      text eol=lf
+*.md        text eol=lf
+
+# 二进制文件不做任何转换
+*.jpg  binary
+*.jpeg binary
+*.png  binary
+*.gif  binary
+*.ico  binary
+*.webp binary
+*.zip  binary
+*.woff  binary
+*.woff2 binary

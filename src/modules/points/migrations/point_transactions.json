@@ -1,0 +1,27 @@
+[
+  {
+    "id": "zj_point_transactions",
+    "name": "point_transactions",
+    "type": "base",
+    "system": false,
+    "listRule": "@request.auth.id = user || @request.auth.paired_user = user",
+    "viewRule": "@request.auth.id = user || @request.auth.paired_user = user",
+    "createRule": "",
+    "updateRule": "",
+    "deleteRule": "",
+    "fields": [
+      { "autogeneratePattern": "[a-z0-9]{15}", "hidden": false, "id": "text_id", "max": 15, "min": 15, "name": "id", "pattern": "^[a-z0-9]+$", "presentable": false, "primaryKey": true, "required": true, "system": true, "type": "text" },
+      { "cascadeDelete": true, "collectionId": "_pb_users_auth_", "hidden": false, "id": "rel_user", "maxSelect": 1, "minSelect": 0, "name": "user", "presentable": false, "required": true, "system": false, "type": "relation" },
+      { "hidden": false, "id": "num_amount", "max": null, "min": null, "name": "amount", "onlyInt": true, "presentable": false, "required": true, "system": false, "type": "number" },
+      { "hidden": false, "id": "sel_type", "maxSelect": 1, "name": "type", "presentable": false, "required": true, "system": false, "type": "select", "values": ["earned", "spent", "frozen", "unfrozen"] },
+      { "hidden": false, "id": "sel_source_type", "maxSelect": 1, "name": "source_type", "presentable": false, "required": true, "system": false, "type": "select", "values": ["task", "wish"] },
+      { "autogeneratePattern": "", "hidden": false, "id": "text_source_id", "max": 0, "min": 0, "name": "source_id", "pattern": "", "presentable": false, "primaryKey": false, "required": true, "system": false, "type": "text" },
+      { "hidden": false, "id": "autodate_created_at", "name": "created_at", "onCreate": true, "onUpdate": false, "presentable": false, "system": false, "type": "autodate" },
+      { "hidden": false, "id": "autodate_updated_at", "name": "updated_at", "onCreate": true, "onUpdate": true, "presentable": false, "system": false, "type": "autodate" }
+    ],
+    "indexes": [
+      "CREATE UNIQUE INDEX `idx_zj_pt_source` ON `point_transactions` (`source_type`, `source_id`)",
+      "CREATE INDEX `idx_zj_pt_user` ON `point_transactions` (`user`)"
+    ]
+  }
+]

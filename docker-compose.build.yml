@@ -1,0 +1,23 @@
+# 构建用的 compose 叠加文件（仅在有 Docker 的机器上用）
+#
+#   docker compose -f docker-compose.build.yml build          # 只构建镜像
+#   docker compose -f docker-compose.build.yml up -d --build  # 构建并启动
+#
+# 为什么单独放：docker-compose.yml 里**没有 build 段**，只有 image。
+# 这样 NAS 上执行 `docker compose up -d` 只会拉起已有镜像，
+# 绝不会在 NAS 上触发构建（NAS 通常没有 npm 源、也没有 63MB 的离线包）。
+#
+# 若你要在 NAS 上直接构建（网络通畅、且已放好 deploy/offline 的二进制），
+# 用两条命令合并即可：
+#   docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build
+
+services:
+  zhijian:
+    image: zhijian:1.0
+    build:
+      context: .
+      args:
+        # 留空 = 前端用同域地址（推荐，换域名不用重新构建）
+        VITE_POCKETBASE_URL: ""
+        # npm 源：默认走国内镜像（慢或被限流时再换回 https://registry.npmjs.org）
+        NPM_REGISTRY: "https://registry.npmmirror.com"

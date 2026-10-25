@@ -1,108 +1,183 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { pb } from '@/lib/pocketbase';
-import type { AuthModel } from 'pocketbase';
+import type { ZjUser } from '@/lib/types';
 
 interface AuthContextType {
-  user: AuthModel | null;
-  isSuperAdmin: boolean;
+  user: ZjUser | null;
+  partner: ZjUser | null;
   isValid: boolean;
-  login: (email: string, password: string, isSuperAdmin?: boolean) => Promise<void>;
-  register: (email: string, password: string, passwordConfirm: string) => Promise<void>;
-  logout: () => void;
   isLoading: boolean;
+  /** 是否为管理员（后台管理布局使用，情侣 App 主流程不依赖） */
+  isSuperAdmin: boolean;
+  login: (username: string, password: string) => Promise<void>;
+  register: (input: {
+    username: string;
+    password: string;
+    passwordConfirm: string;
+    name?: string;
+  }) => Promise<void>;
+  logout: () => void;
+  refreshUser: () => Promise<void>;
+  pair: (code: string) => Promise<{ ok: boolean; already?: boolean; error?: string }>;
+  unpair: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+function asUser(model: any): ZjUser | null {
+  return (model as ZjUser) ?? null;
+}
+
+/**
+ * 登录标识：用户名 → 占位邮箱。
+ * PocketBase v0.40 的 passwordAuth.identityFields 无法通过 Admin API 开启 username
+ * （实测 JSON/multipart 均不生效，JS 钩子改配置会 panic），
+ * 因此沿用「username@zhijian.local」一一映射：用户只输入用户名，体验一致。
+ */
+const EMAIL_SUFFIX = '@zhijian.local';
+function toIdentity(username: string) {
+  const value = username.trim();
+  return value.includes('@') ? value : `${value}${EMAIL_SUFFIX}`;
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<AuthModel | null>(pb.authStore.model);
+  const [user, setUser] = useState<ZjUser | null>(asUser(pb.authStore.model));
+  const [partner, setPartner] = useState<ZjUser | null>(null);
   const [isValid, setIsValid] = useState(pb.authStore.isValid);
   const [isLoading, setIsLoading] = useState(true);
+  const isSuperAdmin = !!user?.is_admin || user?.collectionName === '_superusers';
 
-  // 判断是否为超级管理员
-  const checkIsSuperAdmin = (model: AuthModel | null) => {
-    if (!model) return false;
-    // PocketBase 超级管理员通常在 _superusers 集合，或者没有 collectionId 但有 email
-    return model.collectionName === '_superusers' || (model.username && !model.collectionId);
-  };
-
-  const [isSuperAdmin, setIsSuperAdmin] = useState(checkIsSuperAdmin(pb.authStore.model));
-
-  useEffect(() => {
-    // 监听 authStore 的变化
-    return pb.authStore.onChange((token, model) => {
-      setUser(model);
-      setIsValid(!!token);
-      setIsSuperAdmin(checkIsSuperAdmin(model));
-    });
+  /** 拉取伴侣资料（未配对时为 null） */
+  const loadPartner = useCallback(async (pairedId: string | undefined) => {
+    if (!pairedId) {
+      setPartner(null);
+      return;
+    }
+    try {
+      const record = await pb.collection('users').getOne<ZjUser>(pairedId, { $autoCancel: false });
+      setPartner(record);
+    } catch {
+      /**
+       * 读不到时**保留上一次的值**，不要清空。
+       * 典型场景：修改密码后旧 token 立即失效，读伴侣会 404，
+       * 若在这里 setPartner(null)，界面就会误显示成「未绑定」（数据其实还在）。
+       * 真正的解绑会走上面的 pairedId 为空分支，仍然会清空。
+       */
+    }
   }, []);
 
   useEffect(() => {
-    // 验证当前的 auth token
+    return pb.authStore.onChange((token, model) => {
+      setUser(asUser(model));
+      setIsValid(!!token);
+      void loadPartner((model as ZjUser | null)?.paired_user);
+    });
+  }, [loadPartner]);
+
+  useEffect(() => {
     const initAuth = async () => {
       if (!pb.authStore.isValid || !pb.authStore.model) {
         setIsLoading(false);
         return;
       }
-
       try {
-        // 刷新 auth 以确保仍然有效
-        // 根据 model 所在的 collection 进行刷新
-        const model = pb.authStore.model;
-        const collectionName = model?.collectionName || (model?.username && !model?.email ? '_superusers' : 'users');
-        // 禁用自动取消，避免在组件卸载时请求被取消
-        await pb.collection(collectionName).authRefresh({ $autoCancel: false });
+        await pb.collection('users').authRefresh({ $autoCancel: false });
       } catch (err: any) {
-        console.error('Auth refresh failed:', err);
-        // 只有在明确的 401/403 认证错误时才清空，防止网络抖动导致登出
         if (err?.status === 401 || err?.status === 403) {
           pb.authStore.clear();
           setUser(null);
           setIsValid(false);
-          setIsSuperAdmin(false);
-        } else if (err?.isAbort) {
-          // 忽略自动取消的错误
-          console.warn('Auth refresh was autocancelled, this is expected during navigation');
+          setPartner(null);
         }
       } finally {
         setIsLoading(false);
       }
     };
-
     initAuth();
   }, []);
 
-  const register = async (email: string, password: string, passwordConfirm: string) => {
-    // 创建用户
-    await pb.collection('users').create({
-      email,
-      password,
-      passwordConfirm,
-    });
+  // 用户变化（含首次恢复会话）时同步伴侣资料
+  useEffect(() => {
+    void loadPartner(user?.paired_user);
+  }, [user?.paired_user, loadPartner]);
 
-    // 注册成功后自动登录
-    await login(email, password, false);
+  const login = async (username: string, password: string) => {
+    const authData = await pb.collection('users').authWithPassword(toIdentity(username), password);
+    setUser(authData.record as unknown as ZjUser);
+    setIsValid(true);
+    await loadPartner((authData.record as any)?.paired_user);
   };
 
-  const login = async (email: string, password: string, isSuperAdminLogin: boolean = false) => {
-    // 根据选择尝试不同类型的登录
-    const collectionName = isSuperAdminLogin ? '_superusers' : 'users';
-    const authData = await pb.collection(collectionName).authWithPassword(email, password);
-    setUser(authData.record);
-    setIsValid(true);
-    // login 成功后是通过 onChange 触发 setIsSuperAdmin 的，但也可以在这里显式设置一下
-    setIsSuperAdmin(checkIsSuperAdmin(authData.record));
+  const register = async ({
+    username,
+    password,
+    passwordConfirm,
+    name,
+  }: {
+    username: string;
+    password: string;
+    passwordConfirm: string;
+    name?: string;
+  }) => {
+    // PocketBase auth 集合要求 email，这里用占位邮箱（登录走 username）
+    await pb.collection('users').create({
+      username,
+      email: `${username}@zhijian.local`,
+      emailVisibility: false,
+      password,
+      passwordConfirm,
+      name: name || username,
+    });
+    await login(username, password); // 注册后自动登录
+  };
+
+  const refreshUser = async () => {
+    if (!pb.authStore.model?.id) return;
+    const record = await pb
+      .collection('users')
+      .getOne<ZjUser>(pb.authStore.model.id, { $autoCancel: false });
+    setUser(record);
+    await loadPartner(record.paired_user);
   };
 
   const logout = () => {
     pb.authStore.clear();
     setUser(null);
+    setPartner(null);
     setIsValid(false);
-    setIsSuperAdmin(false);
+  };
+
+  const pair = async (code: string) => {
+    try {
+      const res = await pb.send('/api/zhijian/pair', { method: 'POST', body: { code } });
+      await refreshUser();
+      return { ok: true, already: !!res?.already };
+    } catch (err: any) {
+      return { ok: false, error: err?.response?.error || err?.message || '配对失败' };
+    }
+  };
+
+  const unpair = async () => {
+    await pb.send('/api/zhijian/unpair', { method: 'POST' });
+    await refreshUser();
   };
 
   return (
-    <AuthContext.Provider value={{ user, isSuperAdmin, isValid, login, register, logout, isLoading }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        partner,
+        isValid,
+        isLoading,
+        isSuperAdmin,
+        login,
+        register,
+        logout,
+        refreshUser,
+        pair,
+        unpair,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -115,4 +190,3 @@ export const useAuth = () => {
   }
   return context;
 };
-

@@ -1,0 +1,27 @@
+services:
+  zhijian:
+    image: zhijian:1.0
+    container_name: zhijian
+    restart: unless-stopped
+    ports:
+      # 宿主机端口:容器端口（容器内固定 80）
+      # 用长语法 + 数字，避免部分 NAS 的 compose 解析器报 "invalid containerPort: 80"
+      # 想换宿主机端口：改下面 published 的数字，或在同目录建 .env 写 WEB_PORT=8099
+      - target: 80
+        published: 8099
+        protocol: tcp
+    environment:
+      TZ: Asia/Shanghai
+      # 首次部署（数据目录为空）时，PocketBase 会用它创建超级管理员。
+      # 迁移已有数据时留空即可，否则与已有 superuser 冲突。
+      # PB_ADMIN_EMAIL: ""
+      # PB_ADMIN_PASSWORD: ""
+    volumes:
+      # ★ 全部业务数据都在这里：数据库 + 上传的文件。备份/迁移都备份这个目录
+      - ./data/pb_data:/pb/pb_data
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
