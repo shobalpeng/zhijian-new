@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
   BanknotesIcon,
+  MagnifyingGlassIcon,
   MapPinIcon,
   PencilIcon,
   PlusIcon,
@@ -12,6 +13,7 @@ import { useAuth } from '@/components/auth-provider';
 import { useCollection } from '@/hooks/use-collection';
 import { FormDialog, type FieldDef } from '@/components/common/form-dialog';
 import { CoverImage, EmptyState, LoadMoreButton, LoadingText, PageHeader } from '@/components/common/list-parts';
+import { ExpenseGroupList, ExpenseSummary } from '@/components/common/travel-expenses';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -23,6 +25,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { COLLECTION_ID, formatDate, formatMoney, today } from '@/lib/format';
 
@@ -106,6 +109,18 @@ export function TravelPage() {
 
   const [active, setActive] = useState<Destination | null>(null);
   const [expenseOpen, setExpenseOpen] = useState(false);
+  const [search, setSearch] = useState('');
+
+  const keyword = search.trim().toLowerCase();
+  /** 搜索口径与 V1 一致：匹配「目的地名」或「城市」 */
+  const filtered = useMemo(() => {
+    if (!keyword) return dests.records;
+    // 搜索走全量数据，否则已加载之外的记录搜不到
+    const source = dests.allRecords.length ? dests.allRecords : dests.records;
+    return source.filter((d) =>
+      `${d.name ?? ''} ${d.city ?? ''}`.toLowerCase().includes(keyword),
+    );
+  }, [dests.records, dests.allRecords, keyword]);
 
   const expensesByDest = useMemo(() => {
     const map = new Map<string, Expense[]>();
@@ -117,19 +132,43 @@ export function TravelPage() {
     return map;
   }, [expenses.allRecords]);
 
+  /** 全局「记一笔」的目标地（用于费用汇总 tab） */
+  const [globalDestId, setGlobalDestId] = useState('');
+  const globalDest = dests.allRecords.find((d) => d.id === globalDestId) ?? null;
+
+  /**
+   * 这张「记一笔」表单是给哪个目的地用的。
+   * 不能直接用 active：详情弹窗关掉时 active 会被置空，表单还在开着就会丢失目标。
+   */
+  const [expenseTarget, setExpenseTarget] = useState<Destination | null>(null);
+
+  const openExpenseFor = (dest: Destination | null) => {
+    if (!dest) return;
+    setExpenseTarget(dest);
+    setExpenseOpen(true);
+  };
+
   const createExpense = async (fd: FormData) => {
-    if (!active) return;
+    const target = expenseTarget;
+    if (!target) {
+      toast.error('没有选择目的地');
+      return;
+    }
 
     // payer 在数据库里以「目的地创建者」为参照（me = 创建者付）。
     // 表单里是相对当前用户的「我/Ta」，所以非创建者填写时要互换，否则结算方向会反。
-    if (active.creator !== user?.id) {
+    if (target.creator !== user?.id) {
       const picked = String(fd.get('payer') ?? 'me');
       fd.set('payer', picked === 'me' ? 'partner' : 'me');
     }
 
-    fd.append('destination', active.id);
-    await expenses.create(fd);
-    setExpenseOpen(false);
+    fd.append('destination', target.id);
+    try {
+      await expenses.create(fd);
+      setExpenseOpen(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : '添加失败');
+    }
   };
 
   const removeExpense = async (id: string) => {
@@ -162,11 +201,17 @@ export function TravelPage() {
     }
   };
 
+  const visitedDests = dests.allRecords.filter((d) => d.status === 'visited');
+
   return (
     <div className="space-y-4 pb-4">
       <PageHeader
         title="旅游"
-        subtitle={`共 ${dests.records.length} 个目的地`}
+        subtitle={
+          keyword
+            ? `共 ${filtered.length} 个目的地（筛选自 ${dests.allRecords.length} 个）`
+            : `共 ${dests.allRecords.length} 个目的地`
+        }
         action={
           <Button asChild className="rounded-xl">
             <Link to="/travel/new">新增</Link>
@@ -174,28 +219,53 @@ export function TravelPage() {
         }
       />
 
+      {/* 搜索：匹配目的地名或城市 */}
+      <div className="relative">
+        <MagnifyingGlassIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="搜索目的地或城市..."
+          className="pl-9"
+          aria-label="搜索目的地"
+        />
+      </div>
+
       {dests.loading && dests.records.length === 0 ? (
         <LoadingText />
       ) : (
         <Tabs defaultValue="wishlist">
-          <TabsList className="grid w-full grid-cols-3 rounded-xl">
+          <TabsList className="grid w-full grid-cols-4 rounded-xl">
             <TabsTrigger value="wishlist" className="rounded-lg">
               想去 {dests.allRecords.filter((d) => d.status === 'wishlist').length}
             </TabsTrigger>
             <TabsTrigger value="visited" className="rounded-lg">
-              去过 {dests.allRecords.filter((d) => d.status === 'visited').length}
+              去过 {visitedDests.length}
             </TabsTrigger>
             <TabsTrigger value="map" className="rounded-lg">
               地图
             </TabsTrigger>
+            <TabsTrigger value="expenses" className="rounded-lg">
+              花费
+            </TabsTrigger>
           </TabsList>
 
           {(['wishlist', 'visited'] as const).map((status) => {
-            const rows = dests.records.filter((d) => d.status === status);
+            const rows = filtered.filter((d) => d.status === status);
             return (
               <TabsContent key={status} value={status} className="space-y-3 pt-2">
                 {rows.length === 0 ? (
-                  <EmptyState text={status === 'wishlist' ? '还没有想去的地方' : '还没有去过的地方'} />
+                  <EmptyState
+                    text={
+                      keyword
+                        ? status === 'wishlist'
+                          ? '没有找到匹配的目的地'
+                          : '没有找到匹配的目的地'
+                        : status === 'wishlist'
+                          ? '还没有想去的地方'
+                          : '还没有去过的地方'
+                    }
+                  />
                 ) : (
                   rows.map((d) => {
                     const list = expensesByDest.get(d.id) ?? [];
@@ -250,7 +320,7 @@ export function TravelPage() {
             );
           })}
 
-          <TabsContent value="map" className="pt-2">
+          <TabsContent value="map" className="space-y-4 pt-2">
             <Suspense fallback={<LoadingText />}>
               <TravelMap
                 destinations={dests.allRecords}
@@ -260,6 +330,87 @@ export function TravelPage() {
                 }}
               />
             </Suspense>
+
+            {/* 地图下方补「已去过的目的地」列表（对齐 V1） */}
+            {visitedDests.length > 0 && (
+              <div className="space-y-2">
+                <h3 className="text-sm font-medium text-muted-foreground">已去过的目的地</h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {visitedDests.map((d) => (
+                    <Card
+                      key={d.id}
+                      className="cursor-pointer rounded-2xl"
+                      onClick={() => setActive(d)}
+                    >
+                      <CardContent className="space-y-2 p-3">
+                        <CoverImage
+                          collectionId={COLLECTION_ID.destinations}
+                          recordId={d.id}
+                          file={d.cover_image}
+                          className="h-24 w-full"
+                        />
+                        <p className="truncate text-sm font-medium">{d.name}</p>
+                        {d.city && (
+                          <p className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <MapPinIcon className="h-3 w-3" />
+                            {d.city}
+                          </p>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+          </TabsContent>
+
+          {/* 花费汇总（对齐 V1 的 ExpenseSummary + ExpenseList） */}
+          <TabsContent value="expenses" className="space-y-3 pt-2">
+            {expenses.allRecords.length === 0 ? (
+              <EmptyState text="还没有花费记录" />
+            ) : (
+              <>
+                <ExpenseSummary
+                  expenses={expenses.allRecords}
+                  destinations={dests.allRecords}
+                  currentUserId={user?.id}
+                />
+
+                <div className="rounded-2xl bg-card p-4 ring-1 ring-foreground/10">
+                  <p className="mb-2 text-sm font-medium">添加花费</p>
+                  <div className="flex gap-2">
+                    <select
+                      value={globalDestId}
+                      onChange={(e) => setGlobalDestId(e.target.value)}
+                      className="min-w-0 flex-1 rounded-xl border bg-background px-3 py-2 text-sm"
+                      aria-label="选择目的地"
+                    >
+                      <option value="">选择目的地</option>
+                      {dests.allRecords.map((d) => (
+                        <option key={d.id} value={d.id}>
+                          {d.name}
+                        </option>
+                      ))}
+                    </select>
+                    <Button
+                      className="rounded-xl"
+                      disabled={!globalDest}
+                      onClick={() => openExpenseFor(globalDest)}
+                    >
+                      <PlusIcon className="mr-1 h-4 w-4" />
+                      记一笔
+                    </Button>
+                  </div>
+                </div>
+
+                <ExpenseGroupList
+                  expenses={expenses.allRecords}
+                  destinations={dests.allRecords}
+                  currentUserId={user?.id}
+                  onRemove={(id) => void removeExpense(id)}
+                />
+              </>
+            )}
           </TabsContent>
         </Tabs>
 
@@ -279,7 +430,7 @@ export function TravelPage() {
               }}
               onDelete={() => void remove(active)}
               onMarkVisited={() => void markVisited(active)}
-              onAddExpense={() => setExpenseOpen(true)}
+              onAddExpense={() => openExpenseFor(active)}
               onRemoveExpense={removeExpense}
             />
           )}
@@ -290,7 +441,10 @@ export function TravelPage() {
         title="记一笔花费"
         fields={EXPENSE_FIELDS}
         open={expenseOpen}
-        onOpenChange={setExpenseOpen}
+        onOpenChange={(v) => {
+          setExpenseOpen(v);
+          if (!v) setExpenseTarget(null);
+        }}
         onSubmit={createExpense}
         submitLabel="记录"
       />
@@ -342,14 +496,49 @@ function DestinationDetail({
   return (
     <>
       <DialogHeader>
-        <DialogTitle>{dest.name}</DialogTitle>
+        <DialogTitle className="flex items-center gap-2">
+          <span className="truncate">{dest.name}</span>
+          <Badge
+            variant="secondary"
+            className={
+              dest.status === 'visited'
+                ? 'shrink-0 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+                : 'shrink-0 rounded-full bg-sky-500/15 text-sky-600 dark:text-sky-400'
+            }
+          >
+            {dest.status === 'visited' ? '已去过' : '想去'}
+          </Badge>
+        </DialogTitle>
         <DialogDescription>
           {dest.city || '目的地'}
-          {dest.visited_at && ` · ${formatDate(dest.visited_at)}`}
+          {dest.visited_at && ` · ${formatDate(dest.visited_at)} 去过`}
         </DialogDescription>
       </DialogHeader>
 
       <div className="space-y-3">
+        {dest.cover_image && (
+          <CoverImage
+            collectionId={COLLECTION_ID.destinations}
+            recordId={dest.id}
+            file={dest.cover_image}
+            className="h-48 w-full"
+          />
+        )}
+
+        {dest.tagline && (
+          <p className="text-sm text-muted-foreground">{dest.tagline}</p>
+        )}
+
+        {dest.budget_estimate ? (
+          <div className="flex items-center gap-2 rounded-xl bg-muted/40 p-3">
+            <BanknotesIcon className="h-5 w-5 text-muted-foreground" />
+            <span className="text-sm">预算估算：</span>
+            <span className="text-lg font-bold tabular-nums text-primary">
+              {formatMoney(dest.budget_estimate)}
+            </span>
+          </div>
+        ) : null}
+
         {dest.places_to_visit && (
           <div>
             <p className="text-xs text-muted-foreground">想去的地方</p>

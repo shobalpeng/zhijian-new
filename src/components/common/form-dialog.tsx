@@ -238,7 +238,13 @@ export function FormDialog({
       <DialogContent className="max-h-[85vh] overflow-y-auto rounded-2xl">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
-          {description && <DialogDescription>{description}</DialogDescription>}
+          {/* Radix 要求 DialogContent 必须有 description，否则控制台会警告。
+              没传 description 时用 sr-only 的占位文案兜底（只给读屏器听，不显示）。 */}
+          {description ? (
+            <DialogDescription>{description}</DialogDescription>
+          ) : (
+            <DialogDescription className="sr-only">{title}</DialogDescription>
+          )}
         </DialogHeader>
 
         <div className="space-y-3">
