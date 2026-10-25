@@ -7,10 +7,15 @@ Phase 1: 将 src/modules/*/migrations/*.json 中 id 以 "zj_" 开头的集合创
 import json
 import os
 import sys
+import glob
 import urllib.request
 import urllib.error
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# 集合迁移文件的位置：容器里镜像只带了 /app/migrations，用环境变量 ZJ_MIGRATIONS_GLOB 指定
+MIGRATIONS_GLOB = os.environ.get("ZJ_MIGRATIONS_GLOB") or os.path.join(
+    ROOT, "src", "modules", "*", "migrations", "*.json"
+)
 BASE = sys.argv[1] if len(sys.argv) > 1 else "http://127.0.0.1:8096"
 ADMIN_EMAIL = "admin@zhijian.app"
 ADMIN_PASSWORD = "Zhijian#2026!"
@@ -141,23 +146,24 @@ def main():
     print("== 扩展 users ==")
     patch_users(token)
     print("== 应用 zj_ 集合 ==")
+    files = glob.glob(MIGRATIONS_GLOB)
+    if not files:
+        print("  [WARN] 没有找到任何迁移文件（%s）" % MIGRATIONS_GLOB)
+        print("         容器里请改用 enable_thumbs.py，或检查 ZJ_MIGRATIONS_GLOB")
     ok = 0
     failed = 0
     # 依赖顺序：先建被引用的（recipes/destinations），其余随意
     order_hint = ["zj_recipes", "zj_destinations", "zj_cook_history", "zj_expenses"]
     collected = []
-    for dirpath, _, files in os.walk(os.path.join(ROOT, "src", "modules")):
-        for fn in files:
-            if fn.endswith(".json"):
-                p = os.path.join(dirpath, fn)
-                try:
-                    data = json.load(open(p, encoding="utf-8"))
-                except Exception:
-                    continue
-                if isinstance(data, list):
-                    for c in data:
-                        if isinstance(c, dict) and c.get("id", "").startswith("zj_"):
-                            collected.append(c)
+    for p in sorted(glob.glob(MIGRATIONS_GLOB)):
+        try:
+            data = json.load(open(p, encoding="utf-8"))
+        except Exception:
+            continue
+        if isinstance(data, list):
+            for c in data:
+                if isinstance(c, dict) and c.get("id", "").startswith("zj_"):
+                    collected.append(c)
     collected.sort(key=lambda c: (order_hint.index(c["id"]) if c["id"] in order_hint else 99, c["id"]))
     for c in collected:
         if apply_collection(token, c):

@@ -90,6 +90,10 @@ COPY pb_hooks /pb/pb_hooks
 # 管理脚本（全新部署时在容器内建表用）
 COPY scripts /app/scripts
 
+# 集合迁移文件（容器内 apply_collections.py 需要，用 ZJ_MIGRATIONS_GLOB 指定位置）
+COPY src/modules/*/migrations /app/migrations
+ENV ZJ_MIGRATIONS_GLOB=/app/migrations/*.json
+
 # 前端静态文件
 COPY --from=build /app/dist /usr/share/nginx/html
 
