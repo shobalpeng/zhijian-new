@@ -64,7 +64,9 @@ jobs:
             ${{ env.IMAGE_NAME }}:${{ inputs.tag || github.ref_name }}
             ${{ inputs.tag && inputs.push_latest && format('{0}:latest', env.IMAGE_NAME) || '' }}
           build-args: |
-            VITE_POCKETBASE_URL=""
+            # 不要写 VITE_POCKETBASE_URL="" —— 引号会被当成值的字面量传进去，
+            # 前端就会拿 `""` 当后端地址，拼出 /login/""/api/... 这种废路径。
+            # 需要同域部署时直接**不要传这个参数**（Dockerfile 里默认就是空 → 前端走同域）。
             NPM_REGISTRY=https://registry.npmjs.org
           cache-from: type=gha
           cache-to: type=gha,mode=max
