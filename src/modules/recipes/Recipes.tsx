@@ -6,7 +6,7 @@ import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
 import { StarIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '@/components/auth-provider';
 import { useCollection } from '@/hooks/use-collection';
-import { CoverImage, EmptyState, LoadingText, PageHeader } from '@/components/common/list-parts';
+import { CoverImage, EmptyState, LoadMoreButton, LoadingText, PageHeader } from '@/components/common/list-parts';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -232,6 +232,7 @@ export function RecipesPage() {
             );
           })}
         </div>
+
       )}
 
       {/* 做菜评分 */}
@@ -243,6 +244,11 @@ export function RecipesPage() {
           </DialogHeader>
           <div className="py-2">
             <CookRating value={rating} onChange={setRating} />
+        <LoadMoreButton
+          hasMore={recipes.hasMore}
+          loading={recipes.loadingMore}
+          onClick={() => void recipes.loadMore()}
+        />
           </div>
           <DialogFooter>
             <Button variant="outline" className="rounded-xl" onClick={() => setCooking(null)}>

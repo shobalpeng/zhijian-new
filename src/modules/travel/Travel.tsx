@@ -11,7 +11,7 @@ import {
 import { useAuth } from '@/components/auth-provider';
 import { useCollection } from '@/hooks/use-collection';
 import { FormDialog, type FieldDef } from '@/components/common/form-dialog';
-import { CoverImage, EmptyState, LoadingText, PageHeader } from '@/components/common/list-parts';
+import { CoverImage, EmptyState, LoadMoreButton, LoadingText, PageHeader } from '@/components/common/list-parts';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -239,6 +239,7 @@ export function TravelPage() {
             );
           })}
         </Tabs>
+
       )}
 
       {/* 详情 + 花费 */}
@@ -270,6 +271,11 @@ export function TravelPage() {
         onSubmit={createExpense}
         submitLabel="记录"
       />
+        <LoadMoreButton
+          hasMore={dests.hasMore}
+          loading={dests.loadingMore}
+          onClick={() => void dests.loadMore()}
+        />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { pb } from '@/lib/pocketbase';
 
 /**
@@ -8,6 +8,10 @@ import { pb } from '@/lib/pocketbase';
  * 与 use-interactive-items 的区别：这里是纯 CRUD，没有状态机与积分逻辑——
  * 这些集合的写入权限完全由 PocketBase collection rule 在服务端保证
  * （情侣对共享 / personal 仅本人可见），前端不需要自己拼权限条件。
+ *
+ * 分页：默认每页 20 条，调用方用 loadMore() 追加下一页。
+ * 每次都按「已加载的总条数」整段重取（而不是 offset 拼接），
+ * 这样实时推送触发刷新时不会丢数据或出现重复。
  */
 
 export interface UseCollectionOptions {
@@ -17,7 +21,7 @@ export interface UseCollectionOptions {
   expand?: string;
   /** 额外过滤条件（PocketBase filter 语法） */
   filter?: string;
-  /** 单页条数，情侣场景数据量小，默认拉 200 */
+  /** 每页条数，默认 20 */
   perPage?: number;
   /** 是否订阅 realtime（默认 true） */
   realtime?: boolean;
@@ -31,43 +35,50 @@ export function useCollection<T = Record<string, unknown>>(
     sort = '-created_at',
     expand,
     filter = '',
-    perPage = 200,
+    perPage = 20,
     realtime = true,
   } = opts;
 
   const [records, setRecords] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
+  /** 「加载更多」进行中（与首屏 loading 分开，避免整页转圈） */
+  const [loadingMore, setLoadingMore] = useState(false);
+  /** 还有没有下一页 */
+  const [hasMore, setHasMore] = useState(false);
   /** 加载失败原因：不要把错误静默吞成「空列表」，否则排查时无从下手 */
   const [error, setError] = useState<string | null>(null);
+  /** 当前已加载到第几页（realtime 刷新时要用它保持已加载的量） */
+  const pageRef = useRef(1);
 
-  const load = useCallback(async () => {
-    try {
-      const res = await pb.collection(collection).getList(1, perPage, {
+  /** 加载前 targetPage 页（一次性取 targetPage * perPage 条） */
+  const load = useCallback(
+    async (targetPage = 1) => {
+      const size = Math.max(1, targetPage) * perPage;
+      const res = await pb.collection(collection).getList(1, size, {
         sort,
         expand,
         filter: filter || undefined,
         $autoCancel: false,
       });
       setRecords(res.items as unknown as T[]);
+      pageRef.current = targetPage;
+      setHasMore(res.totalItems > res.items.length);
       setError(null);
-    } catch (err) {
-      setRecords([]);
-      setError(err instanceof Error ? err.message : '加载失败');
-    } finally {
-      setLoading(false);
-    }
-  }, [collection, sort, expand, filter, perPage]);
+    },
+    [collection, sort, expand, filter, perPage],
+  );
 
   useEffect(() => {
     setLoading(true);
-    void load();
+    void load(1);
 
     if (!realtime) return;
 
     let unsub: (() => void) | undefined;
     void (async () => {
       try {
-        unsub = await pb.collection(collection).subscribe('*', () => void load());
+        // 有新数据时重取「当前已加载的量」，保持用户已展开的内容不丢失
+        unsub = await pb.collection(collection).subscribe('*', () => void load(pageRef.current));
       } catch {
         /* 订阅失败不阻塞 */
       }
@@ -76,10 +87,23 @@ export function useCollection<T = Record<string, unknown>>(
     return () => unsub?.();
   }, [collection, load, realtime]);
 
+  /** 加载下一页 */
+  const loadMore = useCallback(async () => {
+    if (loadingMore) return;
+    setLoadingMore(true);
+    try {
+      await load(pageRef.current + 1);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '加载失败');
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [load, loadingMore]);
+
   const create = useCallback(
     async (data: FormData | Record<string, unknown>) => {
       const rec = await pb.collection(collection).create(data);
-      void load();
+      void load(pageRef.current);
       return rec;
     },
     [collection, load],
@@ -88,7 +112,7 @@ export function useCollection<T = Record<string, unknown>>(
   const update = useCallback(
     async (id: string, data: FormData | Record<string, unknown>) => {
       const rec = await pb.collection(collection).update(id, data);
-      void load();
+      void load(pageRef.current);
       return rec;
     },
     [collection, load],
@@ -97,10 +121,21 @@ export function useCollection<T = Record<string, unknown>>(
   const remove = useCallback(
     async (id: string) => {
       await pb.collection(collection).delete(id);
-      void load();
+      void load(pageRef.current);
     },
     [collection, load],
   );
 
-  return { records, loading, error, reload: load, create, update, remove };
+  return {
+    records,
+    loading,
+    loadingMore,
+    hasMore,
+    error,
+    reload: () => load(pageRef.current),
+    loadMore,
+    create,
+    update,
+    remove,
+  };
 }

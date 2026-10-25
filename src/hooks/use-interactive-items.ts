@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { pb } from '@/lib/pocketbase';
 import { useAuth } from '@/components/auth-provider';
 import type { InteractiveItem, InteractiveKind } from '@/lib/types';
@@ -61,30 +61,46 @@ export function useInteractiveItems(kind: InteractiveKind) {
   const { user } = useAuth();
   const [items, setItems] = useState<InteractiveItem[]>([]);
   const [loading, setLoading] = useState(true);
+  /** 「加载更多」进行中（与首屏 loading 分开，避免整页转圈） */
+  const [loadingMore, setLoadingMore] = useState(false);
+  /** 还有没有下一页 */
+  const [hasMore, setHasMore] = useState(false);
+  /** 当前已加载到第几页（realtime 刷新时保持已展开的内容） */
+  const pageRef = useRef(1);
 
-  const load = useCallback(async () => {
-    try {
-      const res = await pb.collection(kind).getList(1, 100, {
-        sort: '-created_at',
-        expand: expandFields(kind),
-        $autoCancel: false,
-      });
-      setItems(res.items.map((r) => toInteractiveItem(r, kind)));
-    } catch {
-      setItems([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [kind]);
+  /** 每页条数 */
+  const PAGE_SIZE = 20;
+
+  /** 加载前 targetPage 页（一次性取 targetPage * PAGE_SIZE 条） */
+  const load = useCallback(
+    async (targetPage = 1) => {
+      try {
+        const res = await pb.collection(kind).getList(1, Math.max(1, targetPage) * PAGE_SIZE, {
+          sort: '-created_at',
+          expand: expandFields(kind),
+          $autoCancel: false,
+        });
+        setItems(res.items.map((r) => toInteractiveItem(r, kind)));
+        pageRef.current = targetPage;
+        setHasMore(res.totalItems > res.items.length);
+      } catch {
+        setItems([]);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [kind],
+  );
 
   useEffect(() => {
     setLoading(true);
-    void load();
+    void load(1);
 
     let unsub: (() => void) | undefined;
     void (async () => {
       try {
-        unsub = await pb.collection(kind).subscribe('*', () => void load());
+        // 有新数据时重取「当前已加载的量」，保持用户已展开的内容不丢失
+        unsub = await pb.collection(kind).subscribe('*', () => void load(pageRef.current));
       } catch {
         /* 订阅失败不阻塞 */
       }
@@ -101,7 +117,7 @@ export function useInteractiveItems(kind: InteractiveKind) {
       fd.append('points', String(input.points));
       if (input.image) fd.append('image', input.image);
       const rec = await pb.collection(kind).create(fd);
-      void load();
+      void load(pageRef.current);
       return rec;
     },
     [kind, load],
@@ -111,7 +127,7 @@ export function useInteractiveItems(kind: InteractiveKind) {
   const submit = useCallback(
     async (id: string) => {
       await pb.collection(kind).update(id, { status: 'submitted' });
-      void load();
+      void load(pageRef.current);
     },
     [kind, load],
   );
@@ -120,7 +136,7 @@ export function useInteractiveItems(kind: InteractiveKind) {
   const confirm = useCallback(
     async (id: string) => {
       await pb.collection(kind).update(id, { status: 'confirmed' });
-      void load();
+      void load(pageRef.current);
     },
     [kind, load],
   );
@@ -128,10 +144,33 @@ export function useInteractiveItems(kind: InteractiveKind) {
   const remove = useCallback(
     async (id: string) => {
       await pb.collection(kind).delete(id);
-      void load();
+      void load(pageRef.current);
     },
     [kind, load],
   );
 
-  return { items, loading, reload: load, create, submit, confirm, remove, meId: user?.id ?? '' };
+  /** 加载下一页 */
+  const loadMore = useCallback(async () => {
+    if (loadingMore) return;
+    setLoadingMore(true);
+    try {
+      await load(pageRef.current + 1);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [load, loadingMore]);
+
+  return {
+    items,
+    loading,
+    loadingMore,
+    hasMore,
+    reload: () => load(pageRef.current),
+    loadMore,
+    create,
+    submit,
+    confirm,
+    remove,
+    meId: user?.id ?? '',
+  };
 }

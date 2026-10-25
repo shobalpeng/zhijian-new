@@ -2,7 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { MapIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { useCollection } from '@/hooks/use-collection';
-import { EmptyState, LoadingText, PageHeader } from '@/components/common/list-parts';
+import { EmptyState, LoadMoreButton, LoadingText, PageHeader } from '@/components/common/list-parts';
 import { ImageCarousel } from '@/components/common/image-carousel';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -90,8 +90,14 @@ export function WandersPage() {
             </Card>
           ))}
         </div>
+
       )}
 
+        <LoadMoreButton
+          hasMore={list.hasMore}
+          loading={list.loadingMore}
+          onClick={() => void list.loadMore()}
+        />
     </div>
   );
 }

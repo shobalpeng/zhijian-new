@@ -10,7 +10,7 @@ import {
 import { useAuth } from '@/components/auth-provider';
 import { useCollection } from '@/hooks/use-collection';
 import { useNewRecord } from '@/hooks/use-new-record';
-import { EmptyState, LoadingText, PageHeader } from '@/components/common/list-parts';
+import { EmptyState, LoadMoreButton, LoadingText, PageHeader } from '@/components/common/list-parts';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -264,7 +264,13 @@ export function TodosPage() {
             );
           })}
         </Tabs>
+
       )}
+        <LoadMoreButton
+          hasMore={list.hasMore}
+          loading={list.loadingMore}
+          onClick={() => void list.loadMore()}
+        />
     </div>
   );
 }

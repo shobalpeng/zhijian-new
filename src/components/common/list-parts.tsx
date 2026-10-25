@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react';
 import { fileUrl } from '@/lib/format';
 import { ZoomableImage } from '@/components/common/zoomable-image';
+import { Button } from '@/components/ui/button';
 
-/** 内容模块共用的列表骨架零件：页头 / 空态 / 图片墙 */
+/** 内容模块共用的列表骨架零件：页头 / 空态 / 图片墙 / 加载更多 */
 
 export function PageHeader({
   title,
@@ -34,6 +35,32 @@ export function EmptyState({ text }: { text: string }) {
 
 export function LoadingText() {
   return <p className="text-sm text-muted-foreground">加载中…</p>;
+}
+
+/** 列表底部的「加载更多」按钮：没有下一页时自动隐藏 */
+export function LoadMoreButton({
+  hasMore,
+  loading,
+  onClick,
+}: {
+  hasMore: boolean;
+  loading?: boolean;
+  onClick: () => void;
+}) {
+  if (!hasMore) return null;
+  return (
+    <div className="flex justify-center pt-3">
+      <Button
+        variant="outline"
+        className="rounded-xl"
+        onClick={onClick}
+        disabled={loading}
+        aria-busy={loading}
+      >
+        {loading ? '加载中…' : '加载更多'}
+      </Button>
+    </div>
+  );
 }
 
 export function ImageWall({

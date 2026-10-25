@@ -19,6 +19,7 @@ import { useInteractiveItems } from '@/hooks/use-interactive-items';
 import { COLLECTION_ID, fileUrl, formatDateTimeShort } from '@/lib/format';
 import { KIND_CONFIG, STATUS_META } from './config';
 import type { InteractiveItem, InteractiveKind, TaskStatus } from '@/lib/types';
+import { LoadMoreButton } from '@/components/common/list-parts';
 
 function ItemImage({ item, kind }: { item: InteractiveItem; kind: InteractiveKind }) {
   if (!item.image) return null;
@@ -205,7 +206,8 @@ function ItemCard({
 
 /** tasks / wishes 共用的列表页：状态分组 + 新建入口（独立整页表单）+ 提交/确认 + 详情入口 */
 export function InteractiveBoard({ kind }: { kind: InteractiveKind }) {
-  const { items, loading, meId, submit, confirm, remove } = useInteractiveItems(kind);
+  const { items, loading, loadingMore, hasMore, loadMore, meId, submit, confirm, remove } =
+    useInteractiveItems(kind);
   const cfg = KIND_CONFIG[kind];
   const actions = { submit, confirm, remove };
 
@@ -277,6 +279,8 @@ export function InteractiveBoard({ kind }: { kind: InteractiveKind }) {
           </TabsContent>
         ))}
       </Tabs>
+
+      <LoadMoreButton hasMore={hasMore} loading={loadingMore} onClick={() => void loadMore()} />
     </div>
   );
 }

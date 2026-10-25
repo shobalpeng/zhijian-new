@@ -6,7 +6,7 @@ import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
 import { useCollection } from '@/hooks/use-collection';
 import { ImageCarousel } from '@/components/common/image-carousel';
-import { EmptyState, LoadingText, PageHeader } from '@/components/common/list-parts';
+import { EmptyState, LoadMoreButton, LoadingText, PageHeader } from '@/components/common/list-parts';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -252,6 +252,12 @@ export function DinesPage() {
               );
             })}
           </div>
+
+          <LoadMoreButton
+            hasMore={list.hasMore}
+            loading={list.loadingMore}
+            onClick={() => void list.loadMore()}
+          />
         </>
       )}
     </div>
