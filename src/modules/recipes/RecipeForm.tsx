@@ -44,7 +44,7 @@ export function RecipeFormPage() {
         setIngredients(rec.ingredients ?? '');
         setSteps(rec.steps ?? '');
         if (rec.cover_image) {
-          setExistingImage(fileUrl(COLLECTION_ID.recipes, rec.id, rec.cover_image));
+          setExistingImage(fileUrl(COLLECTION_ID.recipes, rec.id, rec.cover_image, '300x0'));
         }
       } catch {
         toast.error('找不到这个菜谱');

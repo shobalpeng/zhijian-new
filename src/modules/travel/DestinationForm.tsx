@@ -79,7 +79,7 @@ export function DestinationFormPage() {
         setNotes(rec.notes ?? '');
         setStatus(rec.status || 'wishlist');
         if (rec.cover_image) {
-          setExistingImage(fileUrl(COLLECTION_ID.destinations, rec.id, rec.cover_image));
+          setExistingImage(fileUrl(COLLECTION_ID.destinations, rec.id, rec.cover_image, '300x0'));
         }
       } catch {
         toast.error('找不到这个目的地');

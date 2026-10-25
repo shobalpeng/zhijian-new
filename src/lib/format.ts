@@ -18,10 +18,21 @@ export const COLLECTION_ID = {
   user_settings: 'zj_user_settings',
 } as const;
 
-/** 拼 PocketBase 文件 URL（record 只需 collectionId + id） */
-export function fileUrl(collectionId: string, recordId: string, filename: string | undefined | null) {
+/**
+ * 拼 PocketBase 文件 URL（record 只需 collectionId + id）
+ *
+ * @param thumb 缩略图尺寸，如 '300x0'（按宽 300 等比缩放）。
+ *              需在 collection 的 file 字段上配置过同名 thumbs 才会生效，
+ *              否则 PocketBase 会原样返回大图。省略则返回原图地址。
+ */
+export function fileUrl(
+  collectionId: string,
+  recordId: string,
+  filename: string | undefined | null,
+  thumb?: string,
+) {
   if (!filename) return '';
-  return pb.files.getUrl({ collectionId, id: recordId } as never, filename);
+  return pb.files.getUrl({ collectionId, id: recordId } as never, filename, thumb ? { thumb } : undefined);
 }
 
 /** 多图字段（string[] | string）统一转成可用的 URL 数组 */
@@ -29,9 +40,22 @@ export function imageUrls(
   collectionId: string,
   recordId: string,
   files: string[] | string | undefined | null,
+  thumb?: string,
 ): string[] {
   const list = Array.isArray(files) ? files : files ? [files] : [];
-  return list.map((f) => fileUrl(collectionId, recordId, f)).filter(Boolean);
+  return list.map((f) => fileUrl(collectionId, recordId, f, thumb)).filter(Boolean);
+}
+
+/**
+ * 去掉 URL 上的缩略图参数，还原成原图地址。
+ * 列表/轮播用小图渲染，点开放大时再换回原图，保证全屏清晰。
+ */
+export function originalUrl(url: string): string {
+  if (!url) return '';
+  const [base, query] = url.split('?');
+  if (!query) return base;
+  const kept = query.split('&').filter((p) => p && !p.startsWith('thumb='));
+  return kept.length ? `${base}?${kept.join('&')}` : base;
 }
 
 /** PocketBase date 字段形如 "2026-10-23 12:34:56.789Z"，取日期部分 */

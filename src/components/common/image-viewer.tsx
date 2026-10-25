@@ -1,9 +1,13 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { ChevronLeftIcon, ChevronRightIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { originalUrl } from '@/lib/format';
 
 /**
  * 图片全屏查看器：左右箭头切换、键盘 ←/→ 切换、Esc 关闭、
  * 触摸左右滑动切换，点击背景关闭。
+ *
+ * 传入的 urls 可能是缩略图（列表/轮播用的小图），这里统一还原成**原图**，
+ * 保证放大后清晰。
  */
 export function ImageViewer({
   urls,
@@ -17,6 +21,9 @@ export function ImageViewer({
   onClose: () => void;
 }) {
   const touchStartX = useRef<number | null>(null);
+
+  /** 全屏查看始终用原图 */
+  const fullUrls = useMemo(() => urls.map(originalUrl), [urls]);
 
   const prev = () => onChangeIndex(index > 0 ? index - 1 : urls.length - 1);
   const next = () => onChangeIndex(index < urls.length - 1 ? index + 1 : 0);
@@ -95,7 +102,7 @@ export function ImageViewer({
       )}
 
       <img
-        src={urls[index]}
+        src={fullUrls[index]}
         alt=""
         className="max-h-[85vh] max-w-[92vw] object-contain"
         onClick={(e) => e.stopPropagation()}

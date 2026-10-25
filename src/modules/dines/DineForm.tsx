@@ -220,7 +220,7 @@ export function DineFormPage() {
             onChange={setFiles}
             existingImages={existingFiles.map((name) => ({
               name,
-              url: fileUrl(COLLECTION_ID.dines, id!, name),
+              url: fileUrl(COLLECTION_ID.dines, id!, name, '300x0'),
             }))}
             onRemoveExisting={(name) =>
               setExistingFiles((prev) => prev.filter((n) => n !== name))

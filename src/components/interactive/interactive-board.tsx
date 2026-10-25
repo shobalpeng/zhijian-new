@@ -24,7 +24,7 @@ function ItemImage({ item, kind }: { item: InteractiveItem; kind: InteractiveKin
   if (!item.image) return null;
   return (
     <ZoomableImage
-      src={fileUrl(COLLECTION_ID[kind], item.id, item.image)}
+      src={fileUrl(COLLECTION_ID[kind], item.id, item.image, '300x0')}
       alt={item.title}
       className="h-32 w-full rounded-xl object-cover"
     />

@@ -94,7 +94,7 @@ export function DineDetailPage() {
       </header>
 
       <ImageCarousel
-        urls={imageUrls(COLLECTION_ID.dines, record.id, record.images)}
+        urls={imageUrls(COLLECTION_ID.dines, record.id, record.images, '600x0')}
         alt={record.restaurant}
         className="max-h-80"
       />

@@ -169,7 +169,7 @@ export function DinesPage() {
 
           <div>
             {filtered.map((d, index) => {
-              const urls = imageUrls(COLLECTION_ID.dines, d.id, d.images);
+              const urls = imageUrls(COLLECTION_ID.dines, d.id, d.images, '300x0');
               const perPerson =
                 d.cost && d.people_count && d.people_count > 0 ? d.cost / d.people_count : null;
               const isLast = index === filtered.length - 1;

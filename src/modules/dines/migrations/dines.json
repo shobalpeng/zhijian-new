@@ -19,7 +19,7 @@
       { "hidden": false, "id": "num_cost", "max": null, "min": null, "name": "cost", "onlyInt": false, "presentable": false, "required": false, "system": false, "type": "number" },
       { "hidden": false, "id": "num_rating", "max": null, "min": null, "name": "rating", "onlyInt": true, "presentable": false, "required": false, "system": false, "type": "number" },
       { "autogeneratePattern": "", "hidden": false, "id": "text_comment", "max": 0, "min": 0, "name": "comment", "pattern": "", "presentable": false, "primaryKey": false, "required": false, "system": false, "type": "text" },
-      { "hidden": false, "id": "file_images", "maxSelect": 10, "maxSize": 26214400, "mimeTypes": [], "name": "images", "presentable": false, "required": false, "system": false, "type": "file" },
+      { "hidden": false, "id": "file_images", "maxSelect": 10, "maxSize": 26214400, "mimeTypes": [], "name": "images", "presentable": false, "required": false, "system": false, "thumbs": ["300x0", "600x0"], "type": "file" },
       { "cascadeDelete": true, "collectionId": "_pb_users_auth_", "hidden": false, "id": "rel_creator", "maxSelect": 1, "minSelect": 0, "name": "creator", "presentable": false, "required": true, "system": false, "type": "relation" },
       { "hidden": false, "id": "autodate_created_at", "name": "created_at", "onCreate": true, "onUpdate": false, "presentable": false, "system": false, "type": "autodate" },
       { "hidden": false, "id": "autodate_updated_at", "name": "updated_at", "onCreate": true, "onUpdate": true, "presentable": false, "system": false, "type": "autodate" }

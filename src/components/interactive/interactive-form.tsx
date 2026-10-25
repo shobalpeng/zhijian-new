@@ -74,7 +74,7 @@ export function InteractiveFormPage({ kind }: { kind: InteractiveKind }) {
         setTitle(rec.title ?? '');
         setDescription(rec.description ?? '');
         setPoints(rec.points != null ? String(rec.points) : '');
-        if (rec.image) setExistingImage(fileUrl(IMAGE_COLLECTION[kind], rec.id, rec.image));
+        if (rec.image) setExistingImage(fileUrl(IMAGE_COLLECTION[kind], rec.id, rec.image, '300x0'));
         if (rec.status && rec.status !== 'pending') {
           toast.error('只有待完成状态可以编辑');
           navigate(`/${kind}`, { replace: true });

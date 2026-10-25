@@ -50,7 +50,7 @@ export function ImageWall({
   const list = Array.isArray(files) ? files : files ? [files] : [];
   if (list.length === 0) return null;
 
-  const urls = list.map((f) => fileUrl(collectionId, recordId, f));
+  const urls = list.map((f) => fileUrl(collectionId, recordId, f, '300x0'));
 
   return (
     <div className="grid grid-cols-3 gap-2">
@@ -81,7 +81,7 @@ export function CoverImage({
   if (!file) return null;
   return (
     <ZoomableImage
-      src={fileUrl(collectionId, recordId, file)}
+      src={fileUrl(collectionId, recordId, file, '300x0')}
       className={`rounded-xl object-cover ${className}`}
     />
   );

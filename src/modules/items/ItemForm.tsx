@@ -65,7 +65,7 @@ export function ItemFormPage() {
         setStatus(rec.status === 'retired' ? 'retired' : 'active');
         setRetiredDate(rec.retired_date?.slice(0, 10) ?? '');
         setNote(rec.note ?? '');
-        if (rec.image) setExistingImage(fileUrl(COLLECTION_ID.items, rec.id, rec.image));
+        if (rec.image) setExistingImage(fileUrl(COLLECTION_ID.items, rec.id, rec.image, '300x0'));
       } catch {
         toast.error('找不到这个物品');
         navigate('/items', { replace: true });

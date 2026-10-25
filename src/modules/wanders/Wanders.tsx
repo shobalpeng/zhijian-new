@@ -83,7 +83,7 @@ export function WandersPage() {
                 {w.mood && <p className="text-sm text-muted-foreground">{w.mood}</p>}
 
                 <ImageCarousel
-                  urls={imageUrls(COLLECTION_ID.wanders, w.id, w.images)}
+                  urls={imageUrls(COLLECTION_ID.wanders, w.id, w.images, '300x0')}
                   alt={w.location}
                 />
               </CardContent>
