@@ -44,7 +44,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
   // 当 siteName 改变时，更新 document.title
   useEffect(() => {
-    const siteName = settings['system_site_name'] || 'Pocket Stack';
+    const siteName = settings['system_site_name'] || '织间';
     document.title = siteName;
   }, [settings]);
 

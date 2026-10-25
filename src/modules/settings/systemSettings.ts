@@ -31,7 +31,7 @@ export const SYSTEM_GLOBAL_SETTINGS: ModuleSettingsTab = {
       key: 'footer_text',
       label: '页脚文字',
       description: '显示在页面底部的版权信息',
-      placeholder: '© 2026 Pocket Stack. All rights reserved.',
+      placeholder: '© 2026 织间 · 两个人的生活记录本',
     },
   ],
 };
