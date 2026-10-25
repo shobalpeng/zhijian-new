@@ -27,6 +27,9 @@ jobs:
     permissions:
       contents: read
       packages: write
+    env:
+      # 供 deploy 步骤的 if 判断（step 级 if 不能直接用 secrets 上下文）
+      NAS_SSH_HOST: ${{ secrets.NAS_SSH_HOST }}
 
     steps:
       - name: 检出代码
@@ -82,9 +85,10 @@ jobs:
       #   GHCR_TOKEN      GitHub PAT（权限勾 read:packages），用于在 NAS 上登录 ghcr.io
       #                    ⚠️ 不能用 GITHUB_TOKEN：它只在本次运行内有效，NAS 之后 pull 会失败
       - name: 部署到 NAS（配置了 SSH secret 时才执行）
-        if: ${{ secrets.NAS_SSH_HOST != '' }}
+        # 注意：step 级 if 不能用 secrets 上下文（只允许 env/github/inputs/job/...），
+        # 所以判断条件走 job 级 env 传下来的 NAS_SSH_HOST。
+        if: ${{ env.NAS_SSH_HOST != '' }}
         env:
-          NAS_SSH_HOST: ${{ secrets.NAS_SSH_HOST }}
           NAS_SSH_USER: ${{ secrets.NAS_SSH_USER }}
           NAS_APP_DIR: ${{ secrets.NAS_APP_DIR }}
           GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
@@ -95,11 +99,11 @@ jobs:
           echo "${{ secrets.NAS_SSH_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
-            "$NAS_SSH_USER@$NAS_SSH_HOST" <<REMOTE
-            set -e
-            cd "$NAS_APP_DIR"
-            echo "$GHCR_TOKEN" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
-            docker pull "$IMAGE_FULL"
-            docker compose up -d
-            docker compose ps
+            "$NAS_SSH_USER@$NAS_SSH_HOST" <<'REMOTE'
+          set -e
+          cd "$NAS_APP_DIR"
+          echo "$GHCR_TOKEN" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          docker pull "$IMAGE_FULL"
+          docker compose up -d
+          docker compose ps
           REMOTE
