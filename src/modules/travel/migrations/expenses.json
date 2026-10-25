@@ -11,7 +11,7 @@
     "deleteRule": "@request.auth.id = destination.creator || @request.auth.paired_user = destination.creator",
     "fields": [
       { "autogeneratePattern": "[a-z0-9]{15}", "hidden": false, "id": "text_id", "max": 15, "min": 15, "name": "id", "pattern": "^[a-z0-9]+$", "presentable": false, "primaryKey": true, "required": true, "system": true, "type": "text" },
-      { "cascadeDelete": false, "collectionId": "zj_destinations", "hidden": false, "id": "rel_destination", "maxSelect": 1, "minSelect": 0, "name": "destination", "presentable": false, "required": true, "system": false, "type": "relation" },
+      { "cascadeDelete": true, "collectionId": "zj_destinations", "hidden": false, "id": "rel_destination", "maxSelect": 1, "minSelect": 0, "name": "destination", "presentable": false, "required": true, "system": false, "type": "relation" },
       { "hidden": false, "id": "sel_category", "maxSelect": 1, "name": "category", "presentable": false, "required": true, "system": false, "type": "select", "values": ["transport", "accommodation", "dining", "tickets", "shopping", "other"] },
       { "hidden": false, "id": "num_amount", "max": null, "min": null, "name": "amount", "onlyInt": true, "presentable": false, "required": true, "system": false, "type": "number" },
       { "hidden": false, "id": "sel_payer", "maxSelect": 1, "name": "payer", "presentable": false, "required": true, "system": false, "type": "select", "values": ["me", "partner"] },
