@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, lazy, Suspense } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
@@ -51,6 +51,14 @@ interface Expense {
   payer: 'me' | 'partner';
   note?: string;
 }
+
+/**
+ * 足迹地图按需加载：leaflet 体积不小（约 +170KB gzip），
+ * 只有切到「地图」tab 时才下载，首屏不受影响。
+ */
+const TravelMap = lazy(() =>
+  import('@/components/common/travel-map').then((m) => ({ default: m.TravelMap })),
+);
 
 const EXPENSE_FIELDS: FieldDef[] = [
   {
@@ -170,12 +178,15 @@ export function TravelPage() {
         <LoadingText />
       ) : (
         <Tabs defaultValue="wishlist">
-          <TabsList className="grid w-full grid-cols-2 rounded-xl">
+          <TabsList className="grid w-full grid-cols-3 rounded-xl">
             <TabsTrigger value="wishlist" className="rounded-lg">
               想去 {dests.allRecords.filter((d) => d.status === 'wishlist').length}
             </TabsTrigger>
             <TabsTrigger value="visited" className="rounded-lg">
               去过 {dests.allRecords.filter((d) => d.status === 'visited').length}
+            </TabsTrigger>
+            <TabsTrigger value="map" className="rounded-lg">
+              地图
             </TabsTrigger>
           </TabsList>
 
@@ -238,6 +249,18 @@ export function TravelPage() {
               </TabsContent>
             );
           })}
+
+          <TabsContent value="map" className="pt-2">
+            <Suspense fallback={<LoadingText />}>
+              <TravelMap
+                destinations={dests.allRecords}
+                onSelect={(id) => {
+                  const hit = dests.allRecords.find((d) => d.id === id);
+                  if (hit) setActive(hit);
+                }}
+              />
+            </Suspense>
+          </TabsContent>
         </Tabs>
 
       )}
