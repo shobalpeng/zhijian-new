@@ -60,26 +60,34 @@ export function useCollection<T = Record<string, unknown>>(
   /** 加载前 targetPage 页（一次性取 targetPage * perPage 条） */
   const load = useCallback(
     async (targetPage = 1) => {
-      const size = Math.max(1, targetPage) * perPage;
-      const query = {
-        sort,
-        expand,
-        filter: filter || undefined,
-        $autoCancel: false,
-      };
-      // 列表按页取；统计用的全量只在第一页时取一次（JSON 很轻，不含图片）
-      const [res, all] = await Promise.all([
-        pb.collection(collection).getList(1, size, query),
-        targetPage === 1
-          ? pb.collection(collection).getList(1, ALL_LIMIT, query)
-          : Promise.resolve(null),
-      ]);
-      setRecords(res.items as unknown as T[]);
-      if (all) setAllRecords(all.items as unknown as T[]);
-      setTotal(res.totalItems);
-      pageRef.current = targetPage;
-      setHasMore(res.totalItems > res.items.length);
-      setError(null);
+      try {
+        const size = Math.max(1, targetPage) * perPage;
+        const query = {
+          sort,
+          expand,
+          filter: filter || undefined,
+          $autoCancel: false,
+        };
+        // 列表按页取；统计用的全量只在第一页时取一次（JSON 很轻，不含图片）
+        const [res, all] = await Promise.all([
+          pb.collection(collection).getList(1, size, query),
+          targetPage === 1
+            ? pb.collection(collection).getList(1, ALL_LIMIT, query)
+            : Promise.resolve(null),
+        ]);
+        setRecords(res.items as unknown as T[]);
+        if (all) setAllRecords(all.items as unknown as T[]);
+        setTotal(res.totalItems);
+        pageRef.current = targetPage;
+        setHasMore(res.totalItems > res.items.length);
+        setError(null);
+      } catch (err) {
+        setRecords([]);
+        setError(err instanceof Error ? err.message : '加载失败');
+      } finally {
+        // ⚠️ 必须在这里结束 loading，否则空列表的页面会一直显示「加载中」
+        setLoading(false);
+      }
     },
     [collection, sort, expand, filter, perPage],
   );
