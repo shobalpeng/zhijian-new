@@ -20,7 +20,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BASE = sys.argv[1] if len(sys.argv) > 1 else "http://127.0.0.1:8090"
 ADMIN_EMAIL = "admin@zhijian.app"
 ADMIN_PASSWORD = "Zhijian#2026!"
-THUMBS = ["300x0", "600x0"]
+THUMBS = ["300x0", "600x0", "900x0"]
 
 # 集合 id → file 字段名
 FILE_FIELDS = {

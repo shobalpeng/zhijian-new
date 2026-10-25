@@ -134,7 +134,7 @@ export function InteractiveDetailPage({ kind }: { kind: InteractiveKind }) {
   const isCreator = item.creator === meId;
   const isCounterpart = item.counterpart === meId;
 
-  const image = fileUrl(COLLECTION_ID[kind], item.id, item.image, '600x0');
+  const image = fileUrl(COLLECTION_ID[kind], item.id, item.image, '900x0');
 
   /** 返回：优先回上一页（列表会带着 ?tab= 还原所在分栏），直接打开详情时回列表 */
   const goBack = () => {
