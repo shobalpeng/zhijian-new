@@ -122,7 +122,7 @@ export function WanderFormPage() {
           onChange={setFiles}
           existingImages={existingFiles.map((name) => ({
             name,
-            url: fileUrl(COLLECTION_ID.wanders, id!, name, '300x0'),
+            url: fileUrl(COLLECTION_ID.wanders, id!, name, '600x0'),
           }))}
           onRemoveExisting={(name) => setExistingFiles((prev) => prev.filter((n) => n !== name))}
           max={9}

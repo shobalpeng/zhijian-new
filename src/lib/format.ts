@@ -21,7 +21,7 @@ export const COLLECTION_ID = {
 /**
  * 拼 PocketBase 文件 URL（record 只需 collectionId + id）
  *
- * @param thumb 缩略图尺寸，如 '300x0'（按宽 300 等比缩放）。
+ * @param thumb 缩略图尺寸，如 '600x0'（按宽 600 等比缩放）。
  *              需在 collection 的 file 字段上配置过同名 thumbs 才会生效，
  *              否则 PocketBase 会原样返回大图。省略则返回原图地址。
  */
