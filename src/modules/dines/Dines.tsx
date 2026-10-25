@@ -1,8 +1,7 @@
 import { useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
+import { Link } from 'react-router-dom';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
-import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+
 import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
 import { useCollection } from '@/hooks/use-collection';
 import { ImageCarousel } from '@/components/common/image-carousel';
@@ -90,7 +89,6 @@ function DineStatsCard({ records }: { records: Dine[] }) {
 }
 
 export function DinesPage() {
-  const navigate = useNavigate();
   const list = useCollection<Dine>('dines', { sort: '-date' });
 
   const [search, setSearch] = useState('');
@@ -105,15 +103,6 @@ export function DinesPage() {
       `${d.restaurant ?? ''} ${d.people ?? ''}`.toLowerCase().includes(keyword),
     );
   }, [list.records, list.allRecords, keyword]);
-
-  const remove = async (d: Dine) => {
-    try {
-      await list.remove(d.id);
-      toast.success('已删除');
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : '删除失败');
-    }
-  };
 
   return (
     <div className="space-y-4 pb-4">
@@ -228,26 +217,6 @@ export function DinesPage() {
                         )}
                       </Link>
 
-                      <div className="flex items-center justify-end gap-1 border-t pt-2">
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-8 w-8 rounded-xl text-muted-foreground"
-                          aria-label="编辑"
-                          onClick={() => navigate(`/dines/${d.id}/edit`)}
-                        >
-                          <PencilIcon className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-8 w-8 rounded-xl text-muted-foreground"
-                          aria-label="删除"
-                          onClick={() => void remove(d)}
-                        >
-                          <TrashIcon className="h-4 w-4" />
-                        </Button>
-                      </div>
                     </CardContent>
                   </Card>
                 </div>

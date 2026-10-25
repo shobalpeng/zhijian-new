@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
-import { CalendarDaysIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { Link } from 'react-router-dom';
+import { CalendarDaysIcon } from '@heroicons/react/24/outline';
 import { useCollection } from '@/hooks/use-collection';
 import { EmptyState, LoadMoreButton, LoadingText, PageHeader } from '@/components/common/list-parts';
 import { Badge } from '@/components/ui/badge';
@@ -21,7 +20,6 @@ interface Anniversary {
 }
 
 export function AnniversariesPage() {
-  const navigate = useNavigate();
   const list = useCollection<Anniversary>('anniversaries', { sort: '-created_at' });
 
   const sorted = useMemo(() => {
@@ -31,15 +29,6 @@ export function AnniversariesPage() {
       return da - db;
     });
   }, [list.records]);
-
-  const remove = async (a: Anniversary) => {
-    try {
-      await list.remove(a.id);
-      toast.success('已删除');
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : '删除失败');
-    }
-  };
 
   return (
     <div className="space-y-4 pb-4">
@@ -64,7 +53,8 @@ export function AnniversariesPage() {
             const isToday = occ.daysUntil === 0;
 
             return (
-              <Card key={a.id} className="rounded-2xl">
+              <Link key={a.id} to={`/anniversaries/${a.id}`} className="block">
+              <Card className="rounded-2xl">
                 <CardContent className="flex items-start gap-3 pt-4">
                   <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-xl bg-primary/10 text-primary">
                     <CalendarDaysIcon className="h-5 w-5" />
@@ -103,27 +93,9 @@ export function AnniversariesPage() {
                     {a.note && <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{a.note}</p>}
                   </div>
 
-                  <div className="flex shrink-0 flex-col gap-1">
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="rounded-xl text-muted-foreground"
-                      aria-label="编辑"
-                      onClick={() => navigate(`/anniversaries/${a.id}/edit`)}
-                    >
-                      <PencilIcon className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="rounded-xl text-muted-foreground"
-                      onClick={() => void remove(a)}
-                    >
-                      <TrashIcon className="h-4 w-4" />
-                    </Button>
-                  </div>
                 </CardContent>
               </Card>
+              </Link>
             );
           })}
         </div>
