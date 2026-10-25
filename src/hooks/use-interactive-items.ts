@@ -60,6 +60,8 @@ export interface CreateItemInput {
 export function useInteractiveItems(kind: InteractiveKind) {
   const { user } = useAuth();
   const [items, setItems] = useState<InteractiveItem[]>([]);
+  /** 全量数据（仅用于统计口径，不用于渲染列表） */
+  const [allItems, setAllItems] = useState<InteractiveItem[]>([]);
   const [loading, setLoading] = useState(true);
   /** 「加载更多」进行中（与首屏 loading 分开，避免整页转圈） */
   const [loadingMore, setLoadingMore] = useState(false);
@@ -70,17 +72,24 @@ export function useInteractiveItems(kind: InteractiveKind) {
 
   /** 每页条数 */
   const PAGE_SIZE = 20;
+  /** 统计用全量上限 */
+  const ALL_LIMIT = 1000;
 
   /** 加载前 targetPage 页（一次性取 targetPage * PAGE_SIZE 条） */
   const load = useCallback(
     async (targetPage = 1) => {
       try {
-        const res = await pb.collection(kind).getList(1, Math.max(1, targetPage) * PAGE_SIZE, {
+        const query = {
           sort: '-created_at',
           expand: expandFields(kind),
           $autoCancel: false,
-        });
+        };
+        const [res, all] = await Promise.all([
+          pb.collection(kind).getList(1, Math.max(1, targetPage) * PAGE_SIZE, query),
+          targetPage === 1 ? pb.collection(kind).getList(1, ALL_LIMIT, query) : Promise.resolve(null),
+        ]);
         setItems(res.items.map((r) => toInteractiveItem(r, kind)));
+        if (all) setAllItems(all.items.map((r) => toInteractiveItem(r, kind)));
         pageRef.current = targetPage;
         setHasMore(res.totalItems > res.items.length);
       } catch {
@@ -162,6 +171,8 @@ export function useInteractiveItems(kind: InteractiveKind) {
 
   return {
     items,
+    /** 全量数据：统计用它 */
+    allItems,
     loading,
     loadingMore,
     hasMore,

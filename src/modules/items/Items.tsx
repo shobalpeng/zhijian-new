@@ -86,10 +86,10 @@ export function ItemsPage() {
         <Tabs defaultValue="active">
           <TabsList className="grid w-full grid-cols-2 rounded-xl">
             <TabsTrigger value="active" className="rounded-lg">
-              在用 {list.records.filter((i) => i.status === 'active').length}
+              在用 {list.allRecords.filter((i) => i.status === 'active').length}
             </TabsTrigger>
             <TabsTrigger value="retired" className="rounded-lg">
-              已退役 {list.records.filter((i) => i.status === 'retired').length}
+              已退役 {list.allRecords.filter((i) => i.status === 'retired').length}
             </TabsTrigger>
           </TabsList>
 

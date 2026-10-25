@@ -92,13 +92,13 @@ export function RecipesPage() {
 
   const cooksByRecipe = useMemo(() => {
     const map = new Map<string, CookHistory[]>();
-    for (const c of cooks.records) {
+    for (const c of cooks.allRecords) {
       const list = map.get(c.recipe) ?? [];
       list.push(c);
       map.set(c.recipe, list);
     }
     return map;
-  }, [cooks.records]);
+  }, [cooks.allRecords]);
 
   const submitCook = async () => {
     if (!cooking || !user?.id) return;

@@ -14,6 +14,9 @@ import { pb } from '@/lib/pocketbase';
  * 这样实时推送触发刷新时不会丢数据或出现重复。
  */
 
+/** 统计用全量数据的上限（情侣场景数据量小，1000 条足够；超出部分统计会略偏） */
+const ALL_LIMIT = 1000;
+
 export interface UseCollectionOptions {
   /** 排序字段，默认自建的 created_at（PocketBase 内置 created 也可，但本项目统一用 created_at） */
   sort?: string;
@@ -40,6 +43,8 @@ export function useCollection<T = Record<string, unknown>>(
   } = opts;
 
   const [records, setRecords] = useState<T[]>([]);
+  /** 全量数据（仅用于统计/搜索，不用于渲染列表）——统计口径必须是全部数据，不能只统计已加载的一页 */
+  const [allRecords, setAllRecords] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
   /** 「加载更多」进行中（与首屏 loading 分开，避免整页转圈） */
   const [loadingMore, setLoadingMore] = useState(false);
@@ -54,13 +59,21 @@ export function useCollection<T = Record<string, unknown>>(
   const load = useCallback(
     async (targetPage = 1) => {
       const size = Math.max(1, targetPage) * perPage;
-      const res = await pb.collection(collection).getList(1, size, {
+      const query = {
         sort,
         expand,
         filter: filter || undefined,
         $autoCancel: false,
-      });
+      };
+      // 列表按页取；统计用的全量只在第一页时取一次（JSON 很轻，不含图片）
+      const [res, all] = await Promise.all([
+        pb.collection(collection).getList(1, size, query),
+        targetPage === 1
+          ? pb.collection(collection).getList(1, ALL_LIMIT, query)
+          : Promise.resolve(null),
+      ]);
       setRecords(res.items as unknown as T[]);
+      if (all) setAllRecords(all.items as unknown as T[]);
       pageRef.current = targetPage;
       setHasMore(res.totalItems > res.items.length);
       setError(null);
@@ -128,6 +141,8 @@ export function useCollection<T = Record<string, unknown>>(
 
   return {
     records,
+    /** 全量数据：统计与搜索用它，不要用分页后的 records */
+    allRecords,
     loading,
     loadingMore,
     hasMore,

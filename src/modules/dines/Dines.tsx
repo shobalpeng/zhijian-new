@@ -99,10 +99,12 @@ export function DinesPage() {
   /** 搜索口径与 V1 一致：匹配「餐厅」或「参与人」 */
   const filtered = useMemo(() => {
     if (!keyword) return list.records;
-    return list.records.filter((d) =>
+    // 搜索走全量数据，否则已加载之外的记录搜不到
+    const source = list.allRecords.length ? list.allRecords : list.records;
+    return source.filter((d) =>
       `${d.restaurant ?? ''} ${d.people ?? ''}`.toLowerCase().includes(keyword),
     );
-  }, [list.records, keyword]);
+  }, [list.records, list.allRecords, keyword]);
 
   const remove = async (d: Dine) => {
     try {
@@ -119,8 +121,8 @@ export function DinesPage() {
         title="聚餐"
         subtitle={
           keyword
-            ? `共 ${filtered.length} 次（筛选自 ${list.records.length} 次）`
-            : `共 ${list.records.length} 次`
+            ? `共 ${filtered.length} 次（筛选自 ${list.allRecords.length} 次）`
+            : `共 ${list.allRecords.length} 次`
         }
         action={
           <Button asChild className="rounded-xl">
@@ -165,7 +167,7 @@ export function DinesPage() {
         />
       ) : (
         <>
-          <DineStatsCard records={list.records} />
+          <DineStatsCard records={list.allRecords} />
 
           <div>
             {filtered.map((d, index) => {

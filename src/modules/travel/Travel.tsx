@@ -101,13 +101,13 @@ export function TravelPage() {
 
   const expensesByDest = useMemo(() => {
     const map = new Map<string, Expense[]>();
-    for (const e of expenses.records) {
+    for (const e of expenses.allRecords) {
       const list = map.get(e.destination) ?? [];
       list.push(e);
       map.set(e.destination, list);
     }
     return map;
-  }, [expenses.records]);
+  }, [expenses.allRecords]);
 
   const createExpense = async (fd: FormData) => {
     if (!active) return;
@@ -172,10 +172,10 @@ export function TravelPage() {
         <Tabs defaultValue="wishlist">
           <TabsList className="grid w-full grid-cols-2 rounded-xl">
             <TabsTrigger value="wishlist" className="rounded-lg">
-              想去 {dests.records.filter((d) => d.status === 'wishlist').length}
+              想去 {dests.allRecords.filter((d) => d.status === 'wishlist').length}
             </TabsTrigger>
             <TabsTrigger value="visited" className="rounded-lg">
-              去过 {dests.records.filter((d) => d.status === 'visited').length}
+              去过 {dests.allRecords.filter((d) => d.status === 'visited').length}
             </TabsTrigger>
           </TabsList>
 

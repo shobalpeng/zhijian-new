@@ -68,6 +68,16 @@ export function TodosPage() {
     return { together: pick('together'), personal: pick('personal') };
   }, [list.records, showArchived]);
 
+  /** 分组条数按全量统计（列表仍是分页加载的） */
+  const countByArea = useMemo(() => {
+    const all = list.allRecords.length ? list.allRecords : list.records;
+    const visible = all.filter((t) => (showArchived ? t.archived : !t.archived));
+    return {
+      together: visible.filter((t) => t.area === 'together').length,
+      personal: visible.filter((t) => t.area === 'personal').length,
+    };
+  }, [list.allRecords, list.records, showArchived]);
+
   const add = async (area: 'together' | 'personal') => {
     const content = draft.trim();
     if (!content) {
@@ -158,10 +168,10 @@ export function TodosPage() {
         <Tabs value={area} onValueChange={(v) => setArea(v as 'together' | 'personal')}>
           <TabsList className="grid w-full grid-cols-2 rounded-xl">
             <TabsTrigger value="together" className="rounded-lg">
-              一起 {byArea.together.length}
+              一起 {countByArea.together}
             </TabsTrigger>
             <TabsTrigger value="personal" className="rounded-lg">
-              我的 {byArea.personal.length}
+              我的 {countByArea.personal}
             </TabsTrigger>
           </TabsList>
 

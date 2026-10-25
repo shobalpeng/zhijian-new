@@ -206,7 +206,7 @@ function ItemCard({
 
 /** tasks / wishes 共用的列表页：状态分组 + 新建入口（独立整页表单）+ 提交/确认 + 详情入口 */
 export function InteractiveBoard({ kind }: { kind: InteractiveKind }) {
-  const { items, loading, loadingMore, hasMore, loadMore, meId, submit, confirm, remove } =
+  const { items, allItems, loading, loadingMore, hasMore, loadMore, meId, submit, confirm, remove } =
     useInteractiveItems(kind);
   const cfg = KIND_CONFIG[kind];
   const actions = { submit, confirm, remove };
@@ -246,7 +246,7 @@ export function InteractiveBoard({ kind }: { kind: InteractiveKind }) {
       <header className="flex items-center justify-between gap-3 pt-2">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">{cfg.title}</h1>
-          <p className="text-sm text-muted-foreground">共 {items.length} 条</p>
+          <p className="text-sm text-muted-foreground">共 {allItems.length} 条</p>
         </div>
         <Button asChild className="rounded-xl">
           <Link to={`/${kind}/new`}>
