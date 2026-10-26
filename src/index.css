@@ -6,7 +6,11 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-    --background: oklch(1 0 0);
+    /* 让原生控件（date 日历图标 / 滚动条 / 自动填充底色）跟随主题 */
+    color-scheme: light;
+    /* iOS systemGroupedBackground：页面用浅灰，卡片才是纯白，
+       靠「灰底 + 白卡」分层，不再依赖卡片描边 */
+    --background: #f2f2f7;
     --foreground: oklch(0.145 0 0);
     --card: oklch(1 0 0);
     --card-foreground: oklch(0.145 0 0);
@@ -17,14 +21,18 @@
     --accent: oklch(0.97 0 0);
     --accent-foreground: oklch(0.205 0 0);
     --destructive: oklch(0.58 0.22 27);
-    --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
+    /* 分隔线贴近 iOS separator（比原来的 #E5E5E5 略深、更清晰） */
+    --border: oklch(0.885 0.004 286);
+    --input: oklch(0.885 0.004 286);
     --ring: oklch(0.708 0 0);
     --radius: 0.625rem;
 }
 
 .dark {
-    --background: oklch(0.145 0 0);
+    color-scheme: dark;
+    /* iOS dark 的分组背景是纯黑，卡片 #1C1C1E 才浮得起来
+       （本文件的 --card 正好就是 oklch(0.205) ≈ #1C1C1E） */
+    --background: #000000;
     --foreground: oklch(0.985 0 0);
     --card: oklch(0.205 0 0);
     --card-foreground: oklch(0.985 0 0);
@@ -35,8 +43,8 @@
     --accent: oklch(0.371 0 0);
     --accent-foreground: oklch(0.985 0 0);
     --destructive: oklch(0.704 0.191 22.216);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
+    --border: oklch(1 0 0 / 14%);
+    --input: oklch(1 0 0 / 16%);
     --ring: oklch(0.556 0 0);
     --radius: 0.625rem;
 }
@@ -62,8 +70,11 @@
 }
 
 .color-blue.dark {
-    --primary: oklch(0.42 0.18 266);
-    --primary-foreground: oklch(0.97 0.014 254.604);
+    /* 原 0.42 的深蓝在深色卡片(0.205)上对比只有 2.01:1，用作文字/链接几乎看不见。
+       提到 0.61 后是 4.58:1；前景同步改深色 → 按钮变「亮底深字」，
+       与 pink / gray 的深色主题保持同一种处理方式。 */
+    --primary: oklch(0.61 0.18 266);
+    --primary-foreground: oklch(0.145 0.02 266);
     --secondary: oklch(0.274 0.006 286.033);
     --secondary-foreground: oklch(0.985 0 0);
     --sidebar: oklch(0.205 0 0);
@@ -146,10 +157,13 @@
     --sidebar-ring: oklch(0.63 0.2 18);
 }
 
-/* 粉色主题：主色 rgb(221, 72, 100) ≈ oklch(0.617 0.185 13.4) */
+/* 粉色主题（默认配色）：玫瑰粉，对齐品牌 Logo
+   L 由 0.617 降到 0.58 —— 原值 #DD4864 在白底上只有 4.05:1，按钮白字与
+   小字链接都过不了 WCAG AA(4.5)，降到 #D03B59 后是 4.72:1，肉眼几乎无差别。
+   按钮前景用纯白（0.985 会白白损失 0.2 个对比点）。 */
 .color-pink {
-    --primary: oklch(0.617 0.185 13.4);
-    --primary-foreground: oklch(0.985 0.01 13.4);
+    --primary: oklch(0.58 0.185 13.4);
+    --primary-foreground: oklch(1 0 0);
     --secondary: oklch(0.96 0.02 13.4);
     --secondary-foreground: oklch(0.2 0.02 13.4);
     --chart-1: oklch(0.617 0.185 13.4);
@@ -218,7 +232,15 @@
 }
 
 @theme inline {
-    --font-sans: 'Figtree Variable', sans-serif;
+    /* Figtree 只带 latin/latin-ext，没有汉字字形。不加中文回退的话，
+       中文会退到浏览器默认 serif/sans-serif，和数字、英文混排时字重字距对不上。
+       顺序：拉丁用 Figtree → 系统 UI → 各平台中文字体 → 兜底 */
+    --font-sans: 'Figtree Variable', -apple-system, BlinkMacSystemFont, 'PingFang SC',
+        'HarmonyOS Sans SC', 'Microsoft YaHei', 'Noto Sans SC', 'Segoe UI', sans-serif;
+
+    /* 路由切换的入场动画。注意：只能做 opacity，不能带 transform ——
+       祖先上有 transform 会让 position:sticky 的页头失去吸顶效果。 */
+    --animate-page-in: zj-page-in 0.2s ease-out;
     --color-sidebar-ring: var(--sidebar-ring);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -259,12 +281,29 @@
     --radius-4xl: calc(var(--radius) + 16px);
 }
 
+@keyframes zj-page-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
     }
   button, [role="button"] {
     @apply cursor-pointer;
+  }
+  /* iOS 风格按下反馈：移动端没有 hover，这是唯一的即时触觉替代。
+     刻意不加 transition —— 瞬变才像原生控件。 */
+  a, button, [role="button"] {
+    -webkit-tap-highlight-color: transparent;
+  }
+  a:active, button:active, [role="button"]:active {
+    opacity: 0.65;
   }
   body {
     @apply font-sans bg-background text-foreground;

@@ -64,7 +64,7 @@ export function PairPage() {
                   required
                 />
               </div>
-              <Button type="submit" className="w-full rounded-xl" disabled={isSubmitting}>
+              <Button type="submit" className="h-11 w-full rounded-xl" disabled={isSubmitting}>
                 {isSubmitting && <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />}
                 绑定
               </Button>

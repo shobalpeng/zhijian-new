@@ -87,7 +87,7 @@ export function ExpenseForm({
   };
 
   return (
-    <div className="space-y-3 rounded-2xl bg-card p-4 ring-1 ring-foreground/10">
+    <div className="space-y-3 rounded-2xl bg-card p-4">
       <p className="text-sm font-medium">添加花费</p>
 
       {/* 目的地：详情页进入时锁定，只读展示 */}
@@ -108,7 +108,7 @@ export function ExpenseForm({
             id="expense-dest"
             value={destination}
             onChange={(e) => setDestination(e.target.value)}
-            className="w-full rounded-xl border bg-background px-3 py-2 text-sm"
+            className="w-full rounded-xl border border-transparent bg-input/60 px-3.5 py-2.5 text-sm"
           >
             <option value="">选择目的地</option>
             {destinations.map((d) => (
@@ -163,7 +163,7 @@ export function ExpenseForm({
             id="expense-payer"
             value={payer}
             onChange={(e) => setPayer(e.target.value as 'me' | 'partner')}
-            className="w-full rounded-xl border bg-background px-3 py-2 text-sm"
+            className="w-full rounded-xl border border-transparent bg-input/60 px-3.5 py-2.5 text-sm"
             aria-label="付款方"
           >
             <option value="me">我</option>

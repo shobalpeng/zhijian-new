@@ -38,7 +38,7 @@ export interface SettingsRowProps {
 }
 
 const ROW_CLASS =
-  'flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-muted/50 active:bg-muted';
+  'flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-muted/50';
 
 /** 单行设置项：图标 + 标签 + 右侧值 + › */
 export function SettingsRow({
@@ -62,7 +62,9 @@ export function SettingsRow({
   );
 
   return (
-    <li className="border-b last:border-b-0">
+    /* iOS 分隔线：从图标右侧开始缩进（16px 内边距 + 20px 图标 + 12px gap = 48px），
+       而不是通栏横线 —— 这是 iOS 分组列表最显著的细节 */
+    <li className="relative after:absolute after:bottom-0 after:left-12 after:right-0 after:h-px after:bg-border last:after:hidden">
       {to ? (
         <Link to={to} className={ROW_CLASS}>
           {inner}
@@ -87,7 +89,7 @@ export function SettingsGroup({
   return (
     <Card className="overflow-hidden rounded-2xl py-0">
       {title && (
-        <p className="px-4 pt-3 pb-1 text-xs font-medium text-muted-foreground">{title}</p>
+        <p className="px-4 pt-3 pb-1.5 text-[13px] font-medium text-muted-foreground">{title}</p>
       )}
       <CardContent className="p-0">
         <ul>{children}</ul>

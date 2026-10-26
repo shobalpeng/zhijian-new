@@ -86,7 +86,13 @@ export function BottomNav() {
 
   return (
     <>
-      <nav className="fixed bottom-0 left-0 right-0 z-40 border-t bg-background" aria-label="主导航">
+      {/* pb-[env(...)]：全面屏 iPhone 底部 Home Indicator 的安全区，避免导航条被压住。
+          bg-card/85 + backdrop-blur：iOS Tab Bar 的毛玻璃观感（页面底色已改成浅灰，
+          Tab Bar 必须用白色才分得出来） */}
+      <nav
+        className="fixed bottom-0 left-0 right-0 z-40 border-t bg-card/85 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl"
+        aria-label="主导航"
+      >
         <div className="mx-auto flex h-16 max-w-lg items-center justify-around">
           <NavTab tab={tabs[0]} />
 
@@ -108,7 +114,10 @@ export function BottomNav() {
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent
           side="bottom"
-          className="mx-auto max-w-lg gap-0 rounded-t-2xl border-none bg-transparent px-4 pb-6 shadow-none"
+          showCloseButton={false}
+          /* 原来用 bg-transparent：格子之间的 gap 是透明的，能透出下面的页面内容，看着脏。
+             现在面板恢复实底色，格子改用 muted 做"凹槽"，浅色/深色都有明确层次。 */
+          className="mx-auto max-w-lg gap-0 rounded-t-2xl border-none px-4 pb-[calc(1.5rem_+_env(safe-area-inset-bottom))] shadow-none"
         >
           <div className="grid grid-cols-4 gap-3">
             {CREATE_ACTIONS.map((action) => (
@@ -116,7 +125,7 @@ export function BottomNav() {
                 key={action.label}
                 type="button"
                 onClick={() => handleAction(action.path, action.newPath)}
-                className="flex aspect-square flex-col items-center justify-center gap-1.5 rounded-2xl bg-card transition-colors hover:bg-muted/50"
+                className="flex aspect-square flex-col items-center justify-center gap-1.5 rounded-2xl bg-muted/60 transition-colors hover:bg-muted"
               >
                 <action.icon className="h-7 w-7 text-primary" />
                 <span className="text-xs text-muted-foreground">{action.label}</span>
@@ -127,7 +136,7 @@ export function BottomNav() {
           <button
             type="button"
             onClick={() => setOpen(false)}
-            className="mt-3 w-full rounded-2xl bg-card py-3 text-sm font-medium transition-colors hover:bg-muted/30"
+            className="mt-3 w-full rounded-2xl bg-muted/60 py-3 text-sm font-medium transition-colors hover:bg-muted"
           >
             取消
           </button>

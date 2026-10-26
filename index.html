@@ -4,7 +4,16 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <!-- 状态栏/地址栏跟随主题色，由 ThemeProvider 在切换明暗时改写 content -->
+    <meta name="theme-color" content="#ffffff" />
+    <!-- 加到主屏后以独立 App 全屏运行，而不是 Safari 快捷方式。
+         status-bar-style 用 default（白底黑字）：选 black-translucent 虽然深色更沉浸，
+         但状态栏文字是白色，在浅色主题下完全看不见。 -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="织间" />
     <title>织间</title>
   </head>
   <body>

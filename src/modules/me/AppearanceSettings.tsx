@@ -14,7 +14,7 @@ const MODES = [
 /** 配色选项：hex 用于色点展示，实际主色由 index.css 的 .color-* 变量决定 */
 const COLOR_HEX: Record<AppColorTheme, string> = {
   blue: '#1447e6',
-  pink: '#dd4864',
+  pink: '#d03b59', // 0.58 / 13.4 —— 见 index.css 注释（原 #dd4864 对比度不足）
   green: '#008826',
   red: '#d3013d',
   gray: '#636363',

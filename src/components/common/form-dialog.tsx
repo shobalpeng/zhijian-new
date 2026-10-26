@@ -356,11 +356,11 @@ export function FormDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" className="rounded-xl" onClick={() => setOpen(false)}>
+          <Button variant="outline" className="h-11 rounded-xl" onClick={() => setOpen(false)}>
             取消
           </Button>
           <Button
-            className={cn('rounded-xl')}
+            className={cn('h-11 rounded-xl')}
             disabled={busy}
             onClick={() => void submit()}
           >

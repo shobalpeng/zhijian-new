@@ -52,10 +52,12 @@ export function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
+    <div className="flex min-h-dvh items-center justify-center bg-background p-4">
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center">
-          <h1 className="text-3xl font-semibold tracking-tight text-primary">织间</h1>
+          {/* 与登录页保持同一套品牌头部 */}
+          <img src="/logo.svg" alt="" className="mx-auto h-16 w-16" />
+          <h1 className="mt-3 text-2xl font-semibold tracking-tight">织间</h1>
           <p className="mt-1 text-sm text-muted-foreground">创建你的账号</p>
         </div>
         <Card className="w-full rounded-2xl">
@@ -122,7 +124,7 @@ export function RegisterPage() {
                   />
                 </div>
               </div>
-              <Button type="submit" className="w-full rounded-xl" disabled={isSubmitting}>
+              <Button type="submit" className="h-11 w-full rounded-xl" disabled={isSubmitting}>
                 {isSubmitting && <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />}
                 注册
               </Button>

@@ -51,13 +51,14 @@ export function FormPage({
           onSubmit();
         }}
       >
-        {children}
+        {/* iOS 表单：字段装在白色卡片里。页面底是浅灰，输入框的灰填充
+            只有在白卡上才有层次；直接放灰底上会和背景糊成一片。 */}
+        <div className="space-y-5 rounded-2xl bg-card p-4">{children}</div>
 
-        <div className="pt-2">
-          <Button type="submit" disabled={submitting || disabled} className="w-full rounded-xl">
-            {submitting ? submittingLabel : submitLabel}
-          </Button>
-        </div>
+        {/* 主操作按钮用 44px（iOS 触控下限），默认的 h-9 在整页表单里偏矮 */}
+        <Button type="submit" disabled={submitting || disabled} className="h-11 w-full rounded-xl">
+          {submitting ? submittingLabel : submitLabel}
+        </Button>
       </form>
     </div>
   );

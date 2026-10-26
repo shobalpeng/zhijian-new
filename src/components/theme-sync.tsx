@@ -17,7 +17,7 @@ export const COLOR_LABELS: Record<AppColorTheme, string> = {
 };
 
 function normalizeColor(v: unknown): AppColorTheme {
-  return COLOR_THEMES.includes(v as AppColorTheme) ? (v as AppColorTheme) : 'blue';
+  return COLOR_THEMES.includes(v as AppColorTheme) ? (v as AppColorTheme) : 'pink';
 }
 
 /**

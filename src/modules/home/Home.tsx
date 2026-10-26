@@ -176,7 +176,8 @@ function RecentCard({
                     <span className="text-muted-foreground">
                       {a.type === 'task' ? '任务' : '心愿'}「{a.title}」已确认
                     </span>
-                    <span className="font-bold text-emerald-600">
+                    {/* 深色下 emerald-600 在 oklch(0.145) 背景上对比不足，提亮到 400 */}
+                    <span className="font-bold text-emerald-600 dark:text-emerald-400">
                       {a.type === 'task' ? ` +${a.points}` : ` -${a.points}`}
                     </span>
                   </p>
@@ -229,8 +230,10 @@ export function Home() {
 
   return (
     <div className="space-y-2.5 pb-2">
-      <header className="pt-1">
-        <h1 className="text-xl font-semibold tracking-tight">织间</h1>
+      {/* 标题字号对齐其他顶层页（PageHeader / 我的 = text-2xl）；
+          text-xl→2xl 多出的 4px 行高用去掉 pt-1 抵消，首页总高不变 */}
+      <header>
+        <h1 className="text-2xl font-semibold tracking-tight">织间</h1>
         <p className="text-sm text-muted-foreground">你好，{displayName(user)}</p>
       </header>
 

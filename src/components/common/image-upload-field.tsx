@@ -52,7 +52,7 @@ export function ImageUploadField({
             wrapperClassName="h-full"
             className="h-full w-full object-cover"
           />
-          <span className="pointer-events-none absolute bottom-1 left-1 rounded bg-background/85 px-1 text-[10px] text-muted-foreground">
+          <span className="pointer-events-none absolute bottom-1 left-1 rounded bg-card/85 px-1 text-[10px] text-muted-foreground">
             已有
           </span>
           {onRemoveExisting && (
@@ -60,7 +60,7 @@ export function ImageUploadField({
               type="button"
               aria-label="删除这张已有照片"
               onClick={() => onRemoveExisting(img.name)}
-              className="absolute right-1 top-1 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-background/85 text-foreground shadow-sm"
+              className="absolute right-1 top-1 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-card/85 text-foreground shadow-sm"
             >
               <XMarkIcon className="h-3.5 w-3.5" />
             </button>
@@ -84,7 +84,7 @@ export function ImageUploadField({
             type="button"
             aria-label="移除这张"
             onClick={() => onChange(files.filter((_, idx) => idx !== i))}
-            className="absolute right-1 top-1 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-background/85 text-foreground shadow-sm"
+            className="absolute right-1 top-1 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-card/85 text-foreground shadow-sm"
           >
             <XMarkIcon className="h-3.5 w-3.5" />
           </button>

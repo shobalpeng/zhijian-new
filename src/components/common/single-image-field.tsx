@@ -44,7 +44,7 @@ export function SingleImageField({
             if (file) onChange(null);
             else onClearExisting?.();
           }}
-          className="absolute right-2 top-2 z-10 rounded-full bg-background/85 px-2.5 py-1 text-xs text-muted-foreground shadow-sm"
+          className="absolute right-2 top-2 z-10 rounded-full bg-card/85 px-2.5 py-1 text-xs text-muted-foreground shadow-sm"
         >
           移除
         </button>
